@@ -222,8 +222,17 @@
                     <!-- Se llena con JS -->
                 </div>
 
-                <!-- Debug: Comparación Técnica -->
-                <div id="comparison-details" class="hidden"></div> 
+                <!-- DEBUG: Muestra los precios anuales exactos leídos del CSV para la tarifa ganadora -->
+                <div id="comparison-details" class="bg-red-50 p-4 rounded-xl border border-red-200 text-xs font-mono text-red-800 hidden">
+                    <h5 class="font-bold text-base text-red-600 mb-1">DEBUG: DATOS LEÍDOS DE LA TARIFA GANADORA (ANUALES)</h5>
+                    <p class="text-slate-500">Verifique que estos valores ANUALES coincidan con su hoja de cálculo.</p>
+                    <p id="debug-offer-name"></p>
+                    <p id="debug-p1-annual"></p>
+                    <p id="debug-p2-annual"></p>
+                    <p id="debug-e1-price"></p>
+                    <p id="debug-e2-price"></p>
+                    <p id="debug-e3-price"></p>
+                </div> 
             </div>
 
             <div class="mt-8">
@@ -372,7 +381,15 @@
             newMonthlyCostDisplay: document.getElementById('new-monthly-cost-display'), 
             cupsValue: document.getElementById('cups-value'),
             userConsumptionDetails: document.getElementById('user-consumption-details'),
-            costBreakdown: document.getElementById('cost-breakdown')
+            costBreakdown: document.getElementById('cost-breakdown'),
+            
+            // Elementos DEBUG (NUEVOS)
+            debugOfferName: document.getElementById('debug-offer-name'),
+            debugP1Annual: document.getElementById('debug-p1-annual'),
+            debugP2Annual: document.getElementById('debug-p2-annual'),
+            debugE1Price: document.getElementById('debug-e1-price'),
+            debugE2Price: document.getElementById('debug-e2-price'),
+            debugE3Price: document.getElementById('debug-e3-price')
         };
 
         // --- GESTIÓN DE TARIFAS Y PERSISTENCIA (CACHE LOCAL) ---
@@ -463,14 +480,14 @@
                     const value = values[j].trim().replace(/^"|"$/g, '').replace(/""/g, '"'); 
                     
                     if (header.includes('price') || header.includes('potencia')) {
+                        // Limpieza y parseo numérico (asume formato europeo con coma o punto)
                         const numValue = parseFloat(value.replace(',', '.')); 
                         if (!isNaN(numValue)) {
-                            if (header.includes('potencia') && numValue < 1.0 && numValue > 0) {
-                                tariff[header] = numValue * ANNUAL_DAYS;
-                            } else {
-                                tariff[header] = numValue;
-                            }
+                            // FIX DEL BUG: Asumimos que el usuario introduce el precio ANUAL de potencia y quitamos la auto-conversión.
+                            // Esto evita que precios bajos se multipliquen por 365.
+                            tariff[header] = numValue; 
                         } else {
+                             // Si no es un número válido, descartar la tarifa
                              isValidTariff = false;
                              break;
                         }
@@ -599,19 +616,25 @@
             let minAnnualCost = Infinity;
             let bestBreakdown = null;
 
+            // ESTE BUCLE ASEGURA QUE SE ESTUDIAN TODAS LAS TARIFAS Y SE ELIGE LA MÁS BARATA
             currentTariffs.forEach(t => {
+                // El precio anual (t.p_potencia_1 y t.p_potencia_2) ya está cargado del CSV.
+                // CORRECCIÓN: La división por 365 es esencial para obtener el coste diario, que se multiplica por los días facturados.
                 const priceP1Day = t.p_potencia_1 / ANNUAL_DAYS;
                 const priceP2Day = t.p_potencia_2 / ANNUAL_DAYS;
                 
+                // CÁLCULO COSTE POTENCIA POR PERIODO:
                 const costP1 = data.potencia_p1_kw * data.dias_facturados * priceP1Day;
                 const costP2 = data.potencia_p2_kw * data.dias_facturados * priceP2Day;
                 const subPower = costP1 + costP2;
 
+                // CÁLCULO COSTE ENERGÍA POR PERIODO:
                 const costE1 = data.consumo_punta * t.p1_price;
                 const costE2 = data.consumo_llano * t.p2_price;
                 const costE3 = data.consumo_valle * t.p3_price;
                 const subEnergy = costE1 + costE2 + costE3;
 
+                // CÁLCULO TOTAL
                 const subBase = subPower + subEnergy;
                 const costIE = subBase * IE_RATE;
                 const baseImp = subBase + costIE;
@@ -649,6 +672,7 @@
 
             const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
             const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+            // Usamos 8 decimales para los precios para máxima precisión y trazabilidad.
             const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
             
             // Colores corporativos en HEX (para el correo)
@@ -674,11 +698,11 @@
                         <td colspan="2"><p style="font-weight: bold; color: #333; margin-top: 10px;">TÉRMINO POTENCIA (Precio en €/kW Día)</p></td>
                     </tr>
                     <tr>
-                        <td style="padding: 2px 0;">P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${num(bd.priceP1Day,6)})</td>
+                        <td style="padding: 2px 0;">P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP1Day)})</td>
                         <td style="text-align: right; padding: 2px 0;">${num(bd.costP1,2)} €</td>
                     </tr>
                     <tr>
-                        <td style="padding: 2px 0;">P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${num(bd.priceP2Day,6)})</td>
+                        <td style="padding: 2px 0;">P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP2Day)})</td>
                         <td style="text-align: right; padding: 2px 0;">${num(bd.costP2,2)} €</td>
                     </tr>
                     <tr>
@@ -780,11 +804,13 @@
                     <div class="mb-4">
                         <p class="font-bold text-slate-800 mb-1">TÉRMINO POTENCIA (Precio en €/kW Año)</p>
                         <div class="flex justify-between">
-                            <span>P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${num(bd.priceP1Day,6)})</span>
+                            <!-- Precio P1 Diario calculado, usando 8 decimales para trazabilidad -->
+                            <span>P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP1Day)})</span>
                             <span>${num(bd.costP1,2)} €</span>
                         </div>
                         <div class="flex justify-between">
-                            <span>P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${num(bd.priceP2Day,6)})</span>
+                            <!-- Precio P2 Diario calculado, usando 8 decimales para trazabilidad -->
+                            <span>P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP2Day)})</span>
                             <span>${num(bd.costP2,2)} €</span>
                         </div>
                     </div>
@@ -824,6 +850,15 @@
                     </div>
                 </div>
             `;
+            
+            // --- CÓDIGO DEBUG PARA VERIFICACIÓN DE DATOS CARGADOS (AÚN INVISIBLE) ---
+            els.debugOfferName.textContent = `Tarifa Ganadora: ${offer.name}`;
+            els.debugP1Annual.textContent = `P1 ANUAL: ${numPrice(offer.p_potencia_1)} €/kW año`;
+            els.debugP2Annual.textContent = `P2 ANUAL: ${numPrice(offer.p_potencia_2)} €/kW año`;
+            els.debugE1Price.textContent = `E1 (Punta): ${numPrice(offer.p1_price)} €/kWh`;
+            els.debugE2Price.textContent = `E2 (Llano): ${numPrice(offer.p2_price)} €/kWh`;
+            els.debugE3Price.textContent = `E3 (Valle): ${numPrice(offer.p3_price)} €/kWh`;
+            // --------------------------------------------------------
         }
 
         // --- LÓGICA DE COPIA DE OFERTA (REEMPLAZA ENVÍO DIRECTO) ---
@@ -860,24 +895,28 @@
             // --- 1. Generar Enlace de Formalización (El que va en el botón "QUIERO LA OFERTA")
             
             // Sección de Precios DRK (Nueva Información Adicional para la empresa)
+            // *** MAQUETACIÓN DE LA INFORMACIÓN INTERNA (Texto Plano para mailto) ***
             const pricingDetails = 
-                `--- INFORMACIÓN DE LA OFERTA DRK ---\n` +
-                `Tarifa Contratada: ${offer.name}\n` +
+                `--- DATOS DE LA OFERTA ---\n\n` +
+                `Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name} (2.0TD)\n` +
+                `Zona Geográfica: PENINSULA\n` +
                 `Ahorro Anual Estimado: ${eur(bd.savings)}\n` +
-                `\n` +
-                `Precio Energía P1 (Punta): ${numPrice(offer.p1_price)} €/kWh\n` +
-                `Precio Energía P2 (Llano): ${numPrice(offer.p2_price)} €/kWh\n` +
-                `Precio Energía P3 (Valle): ${numPrice(offer.p3_price)} €/kWh\n` +
-                `\n` +
-                `Precio Potencia P1: ${num(offer.p_potencia_1, 2)} €/kW año\n` +
-                `Precio Potencia P2: ${num(offer.p_potencia_2, 2)} €/kW año\n` +
-                `------------------------------------\n`;
+                `Total Mensual Estimado: ${eur(bd.totalAnnual / 12)}\n` +
+                `Consumo Total Facturado: ${num(bd.consumo_total, 0)} kWh\n\n` +
+                `--- DETALLE DE PRECIOS (€) ---\n` +
+                `P1 (Potencia - €/kW/día): ${numPrice(bd.priceP1Day)}\n` +
+                `P2 (Potencia - €/kW/día): ${numPrice(bd.priceP2Day)}\n` +
+                `E1 (Energía - €/kWh): ${numPrice(offer.p1_price)}\n` +
+                `E2 (Energía - €/kWh): ${numPrice(offer.p2_price)}\n` +
+                `E3 (Energía - €/kWh): ${numPrice(offer.p3_price)}\n` +
+                `------------------------------\n`;
+            // *************************************************************
 
             // Usamos saltos de línea codificados (%0D%0A) y el pre-relleno
             const formalizationBody = 
                 `Hola equipo de Contratación DRK,%0D%0A%0D%0A` +
                 `Confirmo que deseo aceptar la oferta de ahorro con CUPS: ${bd.cups}.%0D%0A%0D%0A` +
-                `${pricingDetails}%0D%0A` + // Insertamos los detalles de la oferta para la empresa
+                `${pricingDetails.replace(/\n/g, '%0D%0A')}%0D%0A` + // Insertamos los detalles de la oferta para la empresa
                 `Por favor, utilicen los siguientes datos para tramitar mi cambio:%0D%0A` +
                 `--------------------------------------------------------%0D%0A` +
                 `DATOS DEL CLIENTE (A RELLENAR):%0D%0A` +
@@ -981,7 +1020,6 @@
                 tempElement.style.left = '-9999px';
                 // Añadimos un atributo de contenido editable para mejorar la compatibilidad en algunos entornos
                 tempElement.setAttribute('contenteditable', 'true');
-                tempElement.innerHTML = htmlContent;
                 document.body.appendChild(tempElement);
                 
                 // 2. Seleccionar el contenido (se requiere focus para document.execCommand)
