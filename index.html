@@ -537,15 +537,17 @@
             const BG_LIGHT = '#f0f9ff';
 
             // Capturar datos del modal o usar placeholders
-            const clientName = els.clientNameInput.value.trim() || '[ESCRIBA AQUÍ SU NOMBRE COMPLETO]';
-            const clientPhone = els.clientPhoneInput.value.trim() || '[ESCRIBA AQUÍ SU NÚMERO DE TELÉFONO]';
-            const clientEmail = els.clientEmailInput.value.trim() || '[ESTE ES EL EMAIL DEL CLIENTE]';
+            const clientName = els.clientNameInput.value.trim() || '[NOMBRE COMPLETO CLIENTE]'; // Restaurado
+            const clientPhone = els.clientPhoneInput.value.trim() || '[TELÉFONO CLIENTE]'; // Restaurado
+            const clientEmail = els.clientEmailInput.value.trim() || '[EMAIL CLIENTE]'; // Restaurado
 
-            // --- CUERPO DEL EMAIL (Plain Text con saltos de línea robustos para mailto) ---
+            // --- CUERPO DEL EMAIL (Texto plano: RESTAURADO CON TODOS LOS DETALLES SOLICITADOS) ---
             const LB = '\r\n'; // CR+LF para mejor compatibilidad en mailto:
             
             const monthlyEstimate = eur(bd.totalAnnual / 12);
             const totalConsumption = num(bd.consumo_total, 0) + ' kWh';
+            
+            // Formatear precios
             const p1PricePerDay = numPriceFormula(bd.priceP1Day);
             const p2PricePerDay = numPriceFormula(bd.priceP2Day);
             const e1Price = numPriceFormula(offer.p1_price);
@@ -553,10 +555,44 @@
             const e3Price = numPriceFormula(offer.p3_price);
 
 
-            const emailBody = `Hola equipo de Contratación DRK,${LB}${LB}Confirmo que deseo aceptar la oferta de ahorro con CUPS: ${bd.cups}.${LB}${LB}--- DATOS DE LA OFERTA ---${LB}${LB}Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name}${LB}Zona Geográfica: PENINSULA${LB}Ahorro Anual Estimado: ${eur(bd.savings)}${LB}Total Mensual Estimado: ${monthlyEstimate}${LB}Consumo Total Facturado: ${totalConsumption}${LB}${LB}--- DETALLE DE PRECIOS (€) ---${LB}P1 (Potencia - €/kW/día): ${p1PricePerDay}${LB}P2 (Potencia - €/kW/día): ${p2PricePerDay}${LB}E1 (Energía - €/kWh): ${e1Price}${LB}E2 (Energía - €/kWh): ${e2Price}${LB}E3 (Energía - €/kWh): ${e3Price}${LB}------------------------------${LB}${LB}Por favor, utilicen los siguientes datos para tramitar mi cambio:${LB}--------------------------------------------------------${LB}DATOS DEL CLIENTE (A RELLENAR):${LB}--------------------------------------------------------${LB}Nombre completo: ${clientName}${LB}Teléfono de contacto: ${clientPhone}${LB}Email de contacto: ${clientEmail}${LB}${LB}--------------------------------------------------------${LB}INFORMACIÓN ADICIONAL (Opcional):${LB}--------------------------------------------------------${LB}[AGREGUE CUALQUIER COMENTARIO EXTRA AQUÍ]${LB}${LB}${LB}*--- DOCUMENTACIÓN REQUERIDA ---*${LB}*Para formalizar el contrato, por favor, responde a este email adjuntando:*${LB}*1. Foto del DNI/CIF (anverso y reverso).*${LB}*2. Última factura (mínimo 3 meses de antigüedad).*${LB}*3. Email de contacto para validación.*${LB}*4. Teléfono de contacto.*${LB}*5. Número de cuenta bancaria (IBAN).*${LB}${LB}*Adjunto la documentación requerida.*`;
+            const emailBody = `Hola DRK, confirmo la aceptación de la oferta con CUPS: ${bd.cups}.${LB}${LB}` +
+                              `--- DATOS DE LA OFERTA ---${LB}${LB}` +
+                              `Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name}${LB}` +
+                              `Zona Geográfica: PENINSULA${LB}` +
+                              `Ahorro Anual Estimado: ${eur(bd.savings)}${LB}` +
+                              `Total Mensual Estimado: ${monthlyEstimate}${LB}` +
+                              `Consumo Total Facturado: ${totalConsumption}${LB}${LB}` +
+                              `--- DETALLE DE PRECIOS (€) ---${LB}` +
+                              `P1 (Potencia - €/kW/día): ${p1PricePerDay}${LB}` +
+                              `P2 (Potencia - €/kW/día): ${p2PricePerDay}${LB}` +
+                              `E1 (Energía - €/kWh): ${e1Price}${LB}` +
+                              `E2 (Energía - €/kWh): ${e2Price}${LB}` +
+                              `E3 (Energía - €/kWh): ${e3Price}${LB}` +
+                              `------------------------------${LB}${LB}` +
+                              `Por favor, utilicen los siguientes datos para tramitar mi cambio:${LB}` +
+                              `--------------------------------------------------------${LB}` +
+                              `DATOS DEL CLIENTE (A RELLENAR):${LB}` +
+                              `--------------------------------------------------------${LB}` +
+                              `Nombre completo: ${clientName}${LB}` +
+                              `Teléfono de contacto: ${clientPhone}${LB}` +
+                              `Email de contacto: ${clientEmail}${LB}${LB}` +
+                              `--------------------------------------------------------${LB}` +
+                              `INFORMACIÓN ADICIONAL (Opcional):${LB}` +
+                              `--------------------------------------------------------${LB}` +
+                              `[AGREGUE CUALQUIER COMENTARIO EXTRA AQUÍ]${LB}${LB}` +
+                              `--- DOCUMENTACIÓN REQUERIDA ---${LB}` +
+                              `Para formalizar el contrato, por favor, responde a este email adjuntando:${LB}` +
+                              `1. Foto del DNI/CIF (anverso y reverso).${LB}` +
+                              `2. Última factura (mínimo 3 meses de antigüedad).${LB}` +
+                              `3. Email de contacto para validación.${LB}` +
+                              `4. Teléfono de contacto.${LB}` +
+                              `5. Número de cuenta bancaria (IBAN).${LB}${LB}` +
+                              `Adjunto la documentación requerida.`;
 
-            // Enlace MAILTO para la acción CTA dentro del HTML copiado (funciona si se hace clic después de pegar en el correo)
-            const formalizationLink = `mailto:f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es?subject=${encodeURIComponent(`ACEPTACIÓN OFERTA ${bd.cups} - ${clientName.replace(/\[.*\]/g, 'PENDIENTE')}`)}&body=${encodeURIComponent(emailBody)}`;
+
+            // Enlace MAILTO optimizado: Asunto más corto para evitar fallo en iOS
+            const subject = `ACEPTACIÓN OFERTA`; 
+            const formalizationLink = `mailto:f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}`;
             
             // Estilos CSS Inline para máxima compatibilidad
             const tableMain = `width: 600px; max-width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; border: 1px solid #ddd; margin: 0 auto; background: white;`;
@@ -573,7 +609,7 @@
                 <!-- TÉRMINO POTENCIA -->
                 <tr><td colspan="2"><div style="font-weight: bold; color: ${BLUE_MED}; padding: 5px 0 2px 0;">TÉRMINO POTENCIA (Precio en €/kW Día)</div></td></tr>
                 <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${numPriceFormula(bd.priceP1Day)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costP1, 2)} €</td></tr>
-                <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${numPriceFormula(bd.priceP2Day)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costP2, 2)} €</td></tr>
+                <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">P2 (${num(bd.potencia_p2_kw,2)} kW x ${numPriceFormula(bd.priceP2Day)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costP2, 2)} €</td></tr>
                 
                 <!-- TÉRMINO ENERGÍA -->
                 <tr><td colspan="2"><div style="font-weight: bold; color: ${BLUE_MED}; padding: 5px 0 2px 0;">TÉRMINO ENERGÍA (Precios en €/kWh)</div></td></tr>
@@ -691,7 +727,7 @@
 
                     <!-- CTA -->
                     <tr><td colspan="2" style="text-align: center; padding: 0 20px 20px 20px;">
-                        <!-- Este enlace mailto se mantiene para que el usuario pueda hacer clic en él después de pegar el HTML en su cliente de correo. -->
+                        <!-- Enlace mailto con cuerpo completo y subject corto -->
                         <a href="${formalizationLink}" style="${btnStyle}">QUIERO LA OFERTA</a>
                         <p style="font-size: 10px; color: #999; margin-top: 10px;">[Colaborador: ${commercialCode}] | Este resumen es una simulación basada en su última factura.</p>
                     </td></tr>
