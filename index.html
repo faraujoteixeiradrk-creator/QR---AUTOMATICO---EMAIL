@@ -3,24 +3,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DRK: Comparador de Tarifas 2.0 TD</title>
-    <!-- Carga de Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configuración de colores corporativos (AZUL/CIAN + ROJO CTA) -->
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
                         drk: {
-                            50: '#f0f9ff',   /* Azul muy claro */
+                            50: '#f0f9ff',
                             100: '#e0f2fe',
-                            500: '#0ea5e9',  /* Cian principal (Badge/Bordes) */
-                            600: '#0284c7',  /* Azul brillante (Botones/Links) */
-                            800: '#075985',  /* Azul corporativo principal (Degradado/Texto principal) */
-                            900: '#0c4a6e',  /* Azul oscuro (Navbar/Degradado) */
+                            500: '#0ea5e9',
+                            600: '#0284c7',
+                            800: '#075985',
+                            900: '#0c4a6e',
                         },
                         'cta-red': {
-                            500: '#CC0000',  /* Rojo para el CTA (Envío de oferta) */
+                            500: '#CC0000',
                             600: '#A00000',
                         }
                     }
@@ -32,23 +30,16 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         #interactive.viewport { position: relative; width: 100%; height: auto; overflow: hidden; border-radius: 1rem; }
         #interactive.viewport > video { width: 100%; height: 100%; object-fit: cover; }
-        /* El loading ring usa el color principal (drk-500) */
         .loading-ring { border: 4px solid rgba(255, 255, 255, 0.3); border-top: 4px solid #0ea5e9; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* Animación para resultados */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-up {
-            animation: fadeInUp 0.5s ease-out forwards;
-        }
+        .animate-fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 </head>
 <body class="flex flex-col min-h-screen text-slate-800">
 
-    <!-- Navbar Simple (DRK-900: Azul Oscuro) -->
+    <!-- Navbar -->
     <div class="w-full bg-drk-900 text-white p-4 shadow-md sticky top-0 z-50">
         <div class="max-w-lg mx-auto flex justify-between items-center">
             <h1 class="text-xl font-bold tracking-tight">DRK <span class="text-drk-500">Energía</span></h1>
@@ -57,71 +48,50 @@
     </div>
 
     <div id="app" class="w-full max-w-lg mx-auto p-4 md:p-6 flex-grow">
-
-        <!-- VISTA 1: INICIO Y CARGA -->
+        
+        <!-- Vista Inicial -->
         <div id="initial-view" class="fade-in">
-            
-            <!-- Tarjeta de Acción Principal -->
             <div class="bg-white p-6 rounded-3xl shadow-xl text-center border-t-4 border-drk-500 relative">
-                
-                <!-- V - [NUMERO] DISPLAY (Contador de Tarifas, DRK-500: Cian) -->
                 <div class="absolute top-4 right-4 bg-drk-500 px-2 py-1 rounded-full text-white text-xs font-bold shadow-md">
                     V - <span id="tariff-display-badge">0</span>
                 </div>
-
                 <div class="w-16 h-16 bg-drk-50 rounded-full flex items-center justify-center mx-auto mb-4 text-drk-600">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path></svg>
                 </div>
                 <h2 class="text-2xl font-bold text-slate-800 mb-2">Analizar Factura</h2>
-                <p class="text-slate-500 mb-6">Escanea el código QR de la factura de tu cliente para calcular el ahorro exacto en tiempo real.</p>
-                
-                <!-- Botón de Escaneo (DRK-600/800 Gradient: Azul) -->
+                <p class="text-slate-500 mb-6">Escanea el código QR de la factura.</p>
                 <button id="start-scan-btn" class="w-full bg-gradient-to-r from-drk-600 to-drk-800 hover:from-drk-700 hover:to-drk-900 text-white font-bold py-4 px-6 rounded-2xl shadow-lg transform transition active:scale-95 flex items-center justify-center gap-3 mb-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.125 3h3.75a2 2 0 011.664.89l.812 1.22a2 2 0 001.664.89H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                     <span>ESCANEAR QR AHORA</span>
                 </button>
-
-                <!-- NUEVO BOTÓN PARA SUBIR / PEGAR IMAGEN (DRK-50/800: Azul) -->
                 <input type="file" id="image-file-input" accept="image/*" class="hidden">
                 <button id="upload-menu-btn" class="w-full bg-drk-50 hover:bg-drk-100 text-drk-800 font-bold py-3 px-6 rounded-xl shadow-sm transform transition active:scale-95 flex items-center justify-center gap-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1m-4-5l-1-1m0 0l-1-1m0 0l-1-1M12 12v.01"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
                     <span>OPCIONES QR MANUAL</span>
                 </button>
-                <p id="loading-status" class="text-center text-sm text-slate-400 mt-4 hidden">Cargando tarifas automáticamente...</p>
+                <p id="loading-status" class="text-center text-sm text-slate-400 mt-4 hidden">Cargando tarifas...</p>
             </div>
-
-            <!-- Se eliminó la sección de MODO MANUAL / PRUEBAS -->
-
         </div>
 
-        <!-- VISTA 2: ESCÁNER -->
+        <!-- Vista Escáner -->
         <div id="scanner-view" class="hidden flex-col h-full">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-bold text-slate-700">Escaneando Factura...</h2>
+                <h2 class="text-lg font-bold text-slate-700">Escaneando...</h2>
                 <button id="stop-scan-btn" class="text-red-500 font-bold text-sm bg-red-50 px-3 py-1 rounded-lg">Cancelar</button>
             </div>
-            
             <div class="relative w-full aspect-[3/4] bg-black rounded-2xl overflow-hidden shadow-2xl mb-4">
                 <div id="interactive" class="viewport w-full h-full"></div>
-                <!-- Guía visual de escaneo (DRK-500: Cian) -->
                 <div class="absolute inset-0 border-2 border-drk-500 opacity-50 m-8 rounded-lg pointer-events-none"></div>
                 <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div class="w-64 h-1 bg-red-500 opacity-50"></div>
                 </div>
             </div>
-
             <p id="scan-message" class="text-center text-sm text-slate-500 mb-4">Enfoca el código QR de la CNMC.</p>
-            
-            <button id="capture-photo-btn" class="w-full bg-white border-2 border-drk-500 text-drk-800 font-bold py-3 rounded-xl shadow-sm flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.125 3h3.75a2 2 0 011.664.89l.812 1.22a2 2 0 001.664.89H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                Capturar Foto Manualmente
-            </button>
+            <button id="capture-photo-btn" class="w-full bg-white border-2 border-drk-500 text-drk-800 font-bold py-3 rounded-xl shadow-sm flex items-center justify-center gap-2">Capturar Foto Manualmente</button>
         </div>
 
-        <!-- VISTA 3: RESULTADOS (DISEÑO PREMIUM) -->
+        <!-- Vista Resultados -->
         <div id="results-view" class="hidden animate-fade-in-up">
-            
-            <!-- Encabezado Resultados -->
             <div class="text-center mb-6">
                 <div class="inline-flex items-center gap-2 bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold mb-2">
                     <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Análisis Completado
@@ -130,217 +100,117 @@
                 <p class="text-sm text-slate-500">CUPS: <span id="cups-value" class="font-mono text-slate-700"></span></p>
             </div>
 
-            <!-- TARJETA PRINCIPAL: COMPARATIVA DE AHORRO -->
+            <!-- Tarjeta Resultado en Pantalla -->
             <div class="bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 mb-8 relative">
-                <!-- Header Degradado (DRK-800/600: Azul) -->
                 <div class="bg-gradient-to-r from-drk-800 to-drk-600 p-6 text-white text-center relative overflow-hidden">
-                    <div class="absolute top-0 right-0 p-4 opacity-10">
-                        <svg class="w-24 h-24" fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/></svg>
-                    </div>
                     <p class="uppercase tracking-widest text-xs font-semibold text-drk-100 mb-1">LA MEJOR OPCIÓN PARA TI ES</p>
                     <h2 id="best-offer-name" class="text-2xl md:text-3xl font-extrabold leading-tight mb-2">Nombre Tarifa</h2>
-                    <p id="best-offer-desc" class="text-drk-100 text-sm opacity-90">Descripción de la tarifa</p>
+                    <p id="best-offer-desc" class="text-drk-100 text-sm opacity-90">Descripción</p>
                 </div>
-
-                <!-- Cuerpo de Comparación: ACTUALIZADO PARA MOSTRAR MES/AÑO -->
                 <div class="p-6">
                     <div class="flex flex-col gap-6">
-                        
-                        <!-- Bloque Visual de Comparación Ahorro -->
-                        <div class="flex flex-col items-center justify-center gap-4 bg-slate-50 rounded-2xl p-6 border border-slate-200">
-                            
-                            <!-- Ahorro Grande -->
-                            <div class="text-center">
-                                <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Tu Ahorro Anual Estimado</p>
-                                <p id="savings-estimate" class="text-5xl font-black text-green-500 tracking-tight">- €</p>
-                            </div>
+                        <div class="text-center">
+                            <p class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Tu Ahorro Anual Estimado</p>
+                            <p id="savings-estimate" class="text-5xl font-black text-green-500 tracking-tight">- €</p>
                         </div>
-
-                        <!-- Detalle Coste Mes vs Año -->
                         <div class="w-full grid grid-cols-2 text-center text-sm border-b pb-4 border-slate-100">
-                            <!-- Columna Coste Actual (Actualizado) -->
                             <div class="border-r border-slate-200 pr-2">
                                 <p class="text-slate-400 text-xs font-semibold mb-2 uppercase">TU FACTURA ACTUAL</p>
-                                
                                 <div class="mb-3">
-                                    <p class="text-xl font-bold text-red-400 line-through decoration-red-400/50 decoration-2" id="old-period-cost-display">0,00 €</p> <!-- Valor real de la factura -->
-                                    <p class="text-xs text-slate-500 font-medium" id="old-period-days-label">Total Periodo (XX días)</p> 
+                                    <p class="text-xl font-bold text-red-400 line-through decoration-red-400/50 decoration-2" id="old-period-cost-display">0,00 €</p>
+                                    <p class="text-xs text-slate-500 font-medium" id="old-period-days-label">Total Periodo</p> 
                                 </div>
-                                
                                 <div>
                                     <p class="text-lg font-bold text-red-500 line-through decoration-red-500/50 decoration-2" id="old-annual-cost-display">0,00 €/año</p>
-                                    <p class="text-xs text-slate-500 font-medium">Proyección Anual</p>
                                 </div>
                             </div>
-
-                            <!-- Columna Coste DRK (Nuevo) - Mantenemos Mes/Año -->
                             <div class="pl-2">
                                 <p class="text-drk-800 text-xs font-semibold mb-2 uppercase">TU NUEVO COSTE DRK</p>
-                                
                                 <div class="mb-3">
                                     <p class="text-2xl font-black text-drk-900" id="new-monthly-cost-display">0,00 €/mes</p>
                                     <p class="text-xs text-drk-800 font-medium">Estimado Mensual</p>
                                 </div>
-                                
                                 <div>
                                     <p class="text-2xl font-black text-drk-900" id="new-annual-cost-display">0,00 €/año</p>
-                                    <p class="text-xs text-drk-800 font-medium">Proyección Anual</p>
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
 
-            <!-- Botones de Acción -->
+            <!-- Botones -->
             <div class="grid grid-cols-1 gap-3 mb-8">
-                 <!-- Botón para COPIAR COMPARATIVO (CTA-RED: Rojo) -->
                  <button id="send-offer-btn" class="w-full bg-cta-red-500 hover:bg-cta-red-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform transition active:scale-95 flex items-center justify-center gap-3 mb-3">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4 4m0 0l-4-4m4 4V5"></path></svg>
                     <span>COPIAR COMPARATIVO</span>
                 </button>
-
-
-                 <!-- Botón para ver desglose (Toggle) (DRK-800: Azul) -->
                  <button onclick="document.getElementById('details-container').classList.toggle('hidden')" class="text-center text-drk-800 font-bold text-sm hover:underline flex items-center justify-center gap-1">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                     Ver desglose detallado del cálculo
                 </button>
             </div>
 
-            <!-- Contenedor de Detalles (Oculto por defecto o visible, a tu elección) -->
             <div id="details-container" class="hidden space-y-6">
-                
-                <h3 class="text-lg font-bold text-slate-800 border-l-4 border-drk-500 pl-3">Datos Extraídos de Factura</h3>
-                <div id="user-consumption-details" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-sm">
-                    <!-- Se llena con JS -->
-                </div>
-
-                <h3 class="text-lg font-bold text-slate-800 border-l-4 border-green-500 pl-3">Cálculo Oficial de la Oferta</h3>
-                <div id="cost-breakdown" class="bg-white p-0 rounded-xl border border-slate-200 shadow-sm overflow-hidden text-sm">
-                    <!-- Se llena con JS -->
-                </div>
-
-                <!-- DEBUG: Muestra los precios anuales exactos leídos del CSV para la tarifa ganadora -->
-                <div id="comparison-details" class="bg-red-50 p-4 rounded-xl border border-red-200 text-xs font-mono text-red-800 hidden">
-                    <h5 class="font-bold text-base text-red-600 mb-1">DEBUG: DATOS LEÍDOS DE LA TARIFA GANADORA (ANUALES)</h5>
-                    <p class="text-slate-500">Verifique que estos valores ANUALES coincidan con su hoja de cálculo.</p>
-                    <p id="debug-offer-name"></p>
-                    <p id="debug-p1-annual"></p>
-                    <p id="debug-p2-annual"></p>
-                    <p id="debug-e1-price"></p>
-                    <p id="debug-e2-price"></p>
-                    <p id="debug-e3-price"></p>
-                </div> 
+                <h3 class="text-lg font-bold text-slate-800 border-l-4 border-drk-500 pl-3">Datos Extraídos</h3>
+                <div id="user-consumption-details" class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-sm"></div>
+                <h3 class="text-lg font-bold text-slate-800 border-l-4 border-green-500 pl-3">Cálculo Oficial</h3>
+                <div id="cost-breakdown" class="bg-white p-0 rounded-xl border border-slate-200 shadow-sm overflow-hidden text-sm"></div>
+                <!-- Debug invisible -->
+                <div id="comparison-details" class="hidden"></div> 
             </div>
 
             <div class="mt-8">
-                <!-- Botón de Nueva Comparación (DRK-500: Cian) -->
                 <button onclick="resetApp()" class="w-full bg-white border-2 border-slate-200 hover:border-drk-500 text-slate-600 hover:text-drk-800 font-bold py-4 rounded-xl transition flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Realizar Nueva Comparación
                 </button>
             </div>
-
         </div>
         
-        <!-- MODAL DE OPCIONES QR MANUALES -->
+        <!-- Modales -->
         <div id="qr-options-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
             <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full">
-                <h3 class="text-xl font-bold text-drk-800 mb-4">Seleccione Opción QR</h3>
-                
-                <!-- Botón Subir Archivo (Opción 1) (DRK-800: Azul) -->
-                <button id="modal-upload-file-btn" class="w-full bg-drk-800 hover:bg-drk-900 text-white font-bold py-3 px-6 rounded-xl shadow-md transform transition active:scale-95 flex items-center justify-center gap-3 mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Subir Imagen (Archivo)
-                </button>
-
-                <!-- Botón Pegar Imagen (Opción 2) (DRK-600: Azul) -->
-                <button id="modal-paste-image-btn" class="w-full bg-drk-600 hover:bg-drk-800 text-white font-bold py-3 px-6 rounded-xl shadow-md transform transition active:scale-95 flex items-center justify-center gap-3 mb-4">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                    Pegar Imagen (CTRL+V)
-                </button>
-
-                <button onclick="document.getElementById('qr-options-modal').classList.add('hidden');" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold py-3 rounded-xl">
-                    Cancelar
-                </button>
-                
-                <!-- Área oculta para capturar el pegado de imagen -->
+                <h3 class="text-xl font-bold text-drk-800 mb-4">Seleccione Opción</h3>
+                <button id="modal-upload-file-btn" class="w-full bg-drk-800 hover:bg-drk-900 text-white font-bold py-3 px-6 rounded-xl shadow-md mb-3">Subir Imagen</button>
+                <button id="modal-paste-image-btn" class="w-full bg-drk-600 hover:bg-drk-800 text-white font-bold py-3 px-6 rounded-xl shadow-md mb-4">Pegar Imagen (CTRL+V)</button>
+                <button onclick="document.getElementById('qr-options-modal').classList.add('hidden');" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold py-3 rounded-xl">Cancelar</button>
                 <textarea id="paste-catcher" class="opacity-0 w-0 h-0 absolute -z-10" aria-hidden="true"></textarea>
-
             </div>
         </div>
 
-
-        <!-- MODAL DE COPIA DE OFERTA -->
         <div id="send-offer-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
             <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full">
                 <h3 class="text-xl font-bold text-drk-800 mb-4">Datos del Comercial y Cliente</h3>
-                
-                <!-- Campos Actualizados para pre-relleno -->
                 <input type="text" id="comercial-code-input" placeholder="CÓDIGO COMERCIAL (Obligatorio)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
-                <input type="text" id="client-name-input" placeholder="Nombre Cliente (Opcional p/ pre-relleno)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
-                <input type="tel" id="client-phone-input" placeholder="Teléfono Cliente (Opcional p/ pre-relleno)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
-                <input type="email" id="client-email-input" placeholder="Email Cliente (Opcional p/ pre-relleno)" class="w-full mb-4 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
-
-                <!-- Botón de Envío (CTA-RED: Rojo) -->
-                <button id="execute-send-offer-btn" class="w-full bg-cta-red-500 hover:bg-cta-red-600 text-white font-bold py-3 rounded-xl shadow-md transform transition active:scale-95 flex items-center justify-center gap-3 mb-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4 4m0 0l-4-4m4 4V5"></path></svg>
-                    COPIAR AL PORTAPAPELES
-                </button>
-
-                <button onclick="document.getElementById('send-offer-modal').classList.add('hidden');" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold py-3 rounded-xl text-sm">
-                    Cancelar
-                </button>
-
+                <input type="text" id="client-name-input" placeholder="Nombre Cliente (Opcional)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
+                <input type="tel" id="client-phone-input" placeholder="Teléfono Cliente (Opcional)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
+                <input type="email" id="client-email-input" placeholder="Email Cliente (Opcional)" class="w-full mb-4 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
+                <button id="execute-send-offer-btn" class="w-full bg-cta-red-500 hover:bg-cta-red-600 text-white font-bold py-3 rounded-xl shadow-md mb-3">COPIAR AL PORTAPAPELES</button>
+                <button onclick="document.getElementById('send-offer-modal').classList.add('hidden');" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold py-3 rounded-xl text-sm">Cancelar</button>
             </div>
         </div>
 
-
-        <!-- MODALES (Error y Guía) -->
         <div id="error-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
             <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full text-center">
-                <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4" id="error-icon">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                </div>
+                <div class="w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4" id="error-icon"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
                 <h3 class="text-lg font-bold text-slate-800 mb-2" id="error-title">¡Ups! Algo salió mal</h3>
                 <p id="error-message" class="text-slate-600 text-sm mb-6"></p>
                 <button onclick="hideErrorModal()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl">Entendido</button>
-            </div>
-        </div>
-
-        <div id="tariff-guide-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-lg w-full">
-                <h3 class="text-xl font-bold text-drk-800 mb-4">Formato CSV Esperado</h3>
-                <div class="bg-slate-100 p-3 rounded-lg overflow-x-auto text-xs font-mono mb-4 text-slate-700">
-                    name, description, p1_price, p2_price, p3_price, p_potencia_1, p_potencia_2
-                </div>
-                <p class="text-xs text-slate-500 mb-4">La Hoja de Google Sheets debe tener estas cabeceras en la primera fila y estar compartida como 'Público'.</p>
-                <button onclick="document.getElementById('tariff-guide-modal').classList.add('hidden');" class="w-full bg-drk-600 hover:bg-drk-700 text-white font-bold py-3 rounded-xl">Cerrar</button>
             </div>
         </div>
     </div>
 
     <!-- SCRIPT PRINCIPAL -->
     <script>
-        // --- CONFIGURACIÓN DE GOOGLE SHEETS ---
-        // La URL de exportación debe ser visible para que el navegador pueda acceder a los datos.
         const SHEET_ID = '13JrbK1T4x5W-2U7KPFprCXMl-FxizxofPA5w8MINyak';
         const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&gid=0`;
-        // ------------------------------------
-
-        // CONSTANTES GLOBALES
         const ANNUAL_DAYS = 365;
         const LOCAL_STORAGE_KEY = 'drk_loaded_tariffs';
 
-        // VARIABLES DE ESTADO
         let currentTariffs = [];
-        let lastComparisonResult = null; // Almacena el último resultado para enviarlo por email
+        let lastComparisonResult = null;
         let scannerRunning = false;
         let stream = null, video = null, canvas = null, canvasCtx = null, animationFrameId = null;
 
-        // ELEMENTOS DOM
         const els = {
             initialView: document.getElementById('initial-view'),
             resultsView: document.getElementById('results-view'),
@@ -350,27 +220,19 @@
             stopScanBtn: document.getElementById('stop-scan-btn'),
             capturePhotoBtn: document.getElementById('capture-photo-btn'),
             loadingStatus: document.getElementById('loading-status'),
-            
-            // Elementos de copia de oferta (Actualizados)
             sendOfferBtn: document.getElementById('send-offer-btn'),
             sendOfferModal: document.getElementById('send-offer-modal'),
             comercialCodeInput: document.getElementById('comercial-code-input'),
-            clientNameInput: document.getElementById('client-name-input'), // NUEVO
-            clientPhoneInput: document.getElementById('client-phone-input'), // NUEVO
-            clientEmailInput: document.getElementById('client-email-input'), // NUEVO
+            clientNameInput: document.getElementById('client-name-input'),
+            clientPhoneInput: document.getElementById('client-phone-input'),
+            clientEmailInput: document.getElementById('client-email-input'),
             executeSendOfferBtn: document.getElementById('execute-send-offer-btn'),
-
-            // Elementos para el contador
             tariffDisplayBadge: document.getElementById('tariff-display-badge'),
-
-            // Elementos para subir imagen/modal
             uploadMenuBtn: document.getElementById('upload-menu-btn'),
             imageFileInput: document.getElementById('image-file-input'),
             qrOptionsModal: document.getElementById('qr-options-modal'),
             modalPasteImageBtn: document.getElementById('modal-paste-image-btn'), 
             pasteCatcher: document.getElementById('paste-catcher'), 
-            
-            // Elementos de resultados
             bestOfferName: document.getElementById('best-offer-name'),
             bestOfferDesc: document.getElementById('best-offer-desc'),
             savingsEstimate: document.getElementById('savings-estimate'),
@@ -381,207 +243,106 @@
             newMonthlyCostDisplay: document.getElementById('new-monthly-cost-display'), 
             cupsValue: document.getElementById('cups-value'),
             userConsumptionDetails: document.getElementById('user-consumption-details'),
-            costBreakdown: document.getElementById('cost-breakdown'),
-            
-            // Elementos DEBUG (NUEVOS)
-            debugOfferName: document.getElementById('debug-offer-name'),
-            debugP1Annual: document.getElementById('debug-p1-annual'),
-            debugP2Annual: document.getElementById('debug-p2-annual'),
-            debugE1Price: document.getElementById('debug-e1-price'),
-            debugE2Price: document.getElementById('debug-e2-price'),
-            debugE3Price: document.getElementById('debug-e3-price')
+            costBreakdown: document.getElementById('cost-breakdown')
         };
 
-        // --- GESTIÓN DE TARIFAS Y PERSISTENCIA (CACHE LOCAL) ---
-
         function updateTariffCount() {
-            // Actualizar el badge V - [COUNT]
             els.tariffDisplayBadge.textContent = currentTariffs.length;
-            
             if (currentTariffs.length > 0) {
-                // Ocultar mensaje de carga/error si hay tarifas
                 els.loadingStatus.classList.add('hidden');
                 els.startScanBtn.disabled = false;
                 els.uploadMenuBtn.disabled = false;
             } else {
-                // Mostrar mensaje de error si no hay tarifas
                 els.loadingStatus.textContent = "Error: No hay tarifas disponibles. Recargando...";
                 els.loadingStatus.classList.remove('hidden');
                 els.startScanBtn.disabled = true;
                 els.uploadMenuBtn.disabled = true;
             }
         }
-
-        function loadTariffsFromStorage() {
-            try {
-                const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
-                if (stored) return JSON.parse(stored);
-            } catch (e) { console.error("Storage Error", e); }
-            return [];
-        }
-
-        function saveTariffsToStorage(tariffs) {
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tariffs));
-        }
+        function loadTariffsFromStorage() { try { const stored = localStorage.getItem(LOCAL_STORAGE_KEY); if (stored) return JSON.parse(stored); } catch (e) { console.error("Storage Error", e); } return []; }
+        function saveTariffsToStorage(tariffs) { localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(tariffs)); }
         
-        // --- LÓGICA DE CARGA DIRECTA DESDE GOOGLE SHEETS ---
-
         function parseCSV(text) {
             const lines = text.trim().split('\n');
-            if (lines.length < 2) throw new Error("Archivo CSV vacío o sin datos de tarifas.");
-            
-            if (lines[0].toLowerCase().includes('<html') || lines[0].toLowerCase().includes('doc.title')) { 
-                 throw new Error("Error de acceso o formato. Asegúrese de que la hoja sea 'Pública'.");
-            }
+            if (lines.length < 2) throw new Error("Archivo CSV vacío.");
+            if (lines[0].toLowerCase().includes('<html')) throw new Error("Error de acceso (HTML devuelto).");
             
             let rawHeaders = lines[0].trim();
             const delimiter = ','; 
             const headers = rawHeaders.split(delimiter).map(h => h.trim().toLowerCase().replace(/"/g, ''));
-            
             const requiredHeaders = ['name', 'description', 'p1_price', 'p2_price', 'p3_price', 'p_potencia_1', 'p_potencia_2'];
-            
-            const missingHeaders = requiredHeaders.filter(h => !headers.includes(h));
-            if (missingHeaders.length > 0) {
-                throw new Error(`Faltan cabeceras requeridas: ${missingHeaders.join(', ')}. Las cabeceras detectadas son: ${headers.join(', ')}.`);
-            }
+            if (!requiredHeaders.every(h => headers.includes(h))) throw new Error(`Faltan cabeceras. Detectadas: ${headers.join(', ')}`);
 
             const newTariffs = [];
             for (let i = 1; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
-
                 const values = [];
                 let current = '';
                 let inQuotes = false;
-                
                 for (let k = 0; k < line.length; k++) {
                     const char = line[k];
-                    if (char === '"' && line[k+1] !== '"') { 
-                        inQuotes = !inQuotes;
-                    } else if (char === delimiter && !inQuotes) {
-                        values.push(current);
-                        current = '';
-                    } else {
-                        current += char;
-                    }
+                    if (char === '"' && line[k+1] !== '"') { inQuotes = !inQuotes; }
+                    else if (char === delimiter && !inQuotes) { values.push(current); current = ''; }
+                    else { current += char; }
                 }
                 values.push(current); 
-
-                if (values.length !== headers.length) {
-                    if (line.length > 10) console.warn(`Saltando línea ${i} debido a conteo de columnas incorrecto.`);
-                    continue;
-                }
+                if (values.length !== headers.length) continue;
                 
                 const tariff = { cups_match: ["2.0TD"] };
                 let isValidTariff = true;
-                
                 for (let j = 0; j < headers.length; j++) {
                     const header = headers[j];
                     const value = values[j].trim().replace(/^"|"$/g, '').replace(/""/g, '"'); 
-                    
                     if (header.includes('price') || header.includes('potencia')) {
-                        // Limpieza y parseo numérico (asume formato europeo con coma o punto)
                         const numValue = parseFloat(value.replace(',', '.')); 
-                        if (!isNaN(numValue)) {
-                            // Asumimos que el usuario introduce el precio ANUAL de potencia
-                            tariff[header] = numValue; 
-                        } else {
-                             // Si no es un número válido, descartar la tarifa
-                             isValidTariff = false;
-                             break;
-                        }
-                    } else {
-                        tariff[header] = value;
-                    }
+                        if (!isNaN(numValue)) { tariff[header] = numValue; } 
+                        else { isValidTariff = false; break; }
+                    } else { tariff[header] = value; }
                 }
-                
-                if (isValidTariff && tariff.p1_price !== undefined) {
-                    newTariffs.push(tariff);
-                }
+                if (isValidTariff && tariff.p1_price !== undefined) newTariffs.push(tariff);
             }
             return newTariffs;
         }
 
-
         async function fetchTariffsFromSheet() {
-            els.loadingStatus.textContent = "Cargando tarifas automáticamente desde Drive...";
+            els.loadingStatus.textContent = "Cargando tarifas...";
             els.loadingStatus.classList.remove('hidden');
-            
-            let csvText = '';
             try {
                 const response = await fetch(SHEET_URL);
-
-                if (!response.ok) {
-                    // Manejo específico del Error 400 (y otros errores de acceso)
-                    if (response.status === 400 || response.status === 401 || response.status === 403) {
-                         throw new Error(`Error de acceso (Código ${response.status}). Esto ocurre si la Hoja de Google Sheets NO está compartida como 'Pública' o el ID de la hoja es incorrecto.`);
-                    }
-                    throw new Error(`Fallo en la conexión (${response.status} ${response.statusText}).`);
-                }
-
-                csvText = await response.text();
+                if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
+                const csvText = await response.text();
                 const loaded = parseCSV(csvText);
-
-                if (loaded.length === 0) {
-                    throw new Error("No se encontraron tarifas válidas después del parseo.");
-                }
-                
+                if (loaded.length === 0) throw new Error("No se encontraron tarifas.");
                 currentTariffs = loaded;
                 saveTariffsToStorage(currentTariffs);
-                
             } catch (err) {
-                console.error("Error diagnóstico (Recepción de datos):", csvText || "Respuesta vacía o fallida.");
-                
-                const cachedTariffs = loadTariffsFromStorage();
-                currentTariffs = cachedTariffs;
-
-                if (cachedTariffs.length > 0) {
-                    console.warn(`ALERTA: Falló la carga desde Google Sheets. Usando ${cachedTariffs.length} tarifas de la caché local. (Error: ${err.message})`);
-                } else {
-                    // Mostrar error crítico al usuario si no hay caché disponible
-                    window.showErrorModal(`Error crítico al cargar tarifas: ${err.message}. Por favor, revise la configuración de acceso a su hoja de Google Drive.`);
-                }
+                console.error("Error fetching:", err);
+                currentTariffs = loadTariffsFromStorage();
+                if (currentTariffs.length === 0) window.showErrorModal("Error crítico: No se pudieron cargar tarifas ni hay caché.");
             } finally {
                 updateTariffCount();
             }
         }
 
-        // --- LÓGICA DE COMPARATIVA ---
-
         function dateDiffInDays(d1, d2) {
             const parse = (str) => {
-                if (!str && str.length !== 10) return null;
-                if (str.includes('/')) {
-                    const p = str.split('/');
-                    return new Date(p[2], p[1]-1, p[0]);
-                }
-                if (str.includes('-')) {
-                    const p = str.split('-');
-                    return new Date(p[0], p[1]-1, p[2]);
-                }
-                if (str.length === 8) { 
-                    const year = str.substring(0, 4);
-                    const month = str.substring(4, 6);
-                    const day = str.substring(6, 8);
-                    return new Date(year, month-1, day);
-                }
+                if (!str || str.length !== 10) return null;
+                if (str.includes('/')) { const p = str.split('/'); return new Date(p[2], p[1]-1, p[0]); }
+                if (str.includes('-')) { const p = str.split('-'); return new Date(p[0], p[1]-1, p[2]); }
+                if (str.length === 8) { const y = str.substring(0,4), m = str.substring(4,6), d = str.substring(6,8); return new Date(y, m-1, d); }
                 return null;
             }
-            const dt1 = parse(d1);
-            const dt2 = parse(d2);
+            const dt1 = parse(d1), dt2 = parse(d2);
             if(!dt1 || !dt2) return 0;
             return Math.ceil(Math.abs(dt2 - dt1) / (1000 * 60 * 60 * 24)) + 1;
         }
 
         function handleQRRead(raw) {
             if (raw.includes('?')) raw = raw.split('?')[1] || raw;
-            
             const p = {};
-            raw.split('&').forEach(part => {
-                const [k, v] = part.split('=');
-                if(k) p[k] = decodeURIComponent(v||'').replace(',', '.');
-            });
-
+            raw.split('&').forEach(part => { const [k, v] = part.split('='); if(k) p[k] = decodeURIComponent(v||'').replace(',', '.'); });
+            
             const data = {
                 cups: p.cups || 'No detectado',
                 dias_facturados: dateDiffInDays(p.iniF, p.finF),
@@ -596,18 +357,16 @@
             };
 
             if (data.dias_facturados === 0 || data.importe_total === 0) {
-                window.showErrorModal("QR incompleto. No se encontraron fechas o importes válidos.");
+                window.showErrorModal("QR incompleto o inválido.");
                 window.resetApp();
                 return;
             }
-
             compareOffers(data);
         }
 
         function compareOffers(data) {
             const IVA_RATE = 0.21;
             const IE_RATE = 0.05113; 
-
             const factorAnual = ANNUAL_DAYS / data.dias_facturados;
             const originalBillAnnual = data.importe_total * factorAnual; 
 
@@ -615,25 +374,19 @@
             let minAnnualCost = Infinity;
             let bestBreakdown = null;
 
-            // ESTE BUCLE ASEGURA QUE SE ESTUDIAN TODAS LAS TARIFAS Y SE ELIGE LA MÁS BARATA
             currentTariffs.forEach(t => {
-                // El precio anual (t.p_potencia_1 y t.p_potencia_2) ya está cargado del CSV.
-                // La división por 365 es esencial para obtener el coste diario, que se multiplica por los días facturados.
                 const priceP1Day = t.p_potencia_1 / ANNUAL_DAYS;
                 const priceP2Day = t.p_potencia_2 / ANNUAL_DAYS;
                 
-                // CÁLCULO COSTE POTENCIA POR PERIODO:
                 const costP1 = data.potencia_p1_kw * data.dias_facturados * priceP1Day;
                 const costP2 = data.potencia_p2_kw * data.dias_facturados * priceP2Day;
                 const subPower = costP1 + costP2;
 
-                // CÁLCULO COSTE ENERGÍA POR PERIODO:
                 const costE1 = data.consumo_punta * t.p1_price;
                 const costE2 = data.consumo_llano * t.p2_price;
                 const costE3 = data.consumo_valle * t.p3_price;
                 const subEnergy = costE1 + costE2 + costE3;
 
-                // CÁLCULO TOTAL
                 const subBase = subPower + subEnergy;
                 const costIE = subBase * IE_RATE;
                 const baseImp = subBase + costIE;
@@ -655,109 +408,13 @@
                 }
             });
 
-            if (!bestOffer) return window.showErrorModal("No se encontraron tarifas compatibles con su perfil (2.0TD).");
-
+            if (!bestOffer) return window.showErrorModal("No se encontraron tarifas compatibles.");
             lastComparisonResult = bestBreakdown;
             renderResultsUI(bestOffer, bestBreakdown);
             showView('results-view');
         }
 
-        // --- LÓGICA DE RENDERIZADO ---
-
-        // Función auxiliar para generar el HTML del desglose (igual que en el Canvas)
-        function generateBreakdownHtml(offer, bd) {
-            const oldPeriodCost = bd.importe_total;
-            const newMonthlyCost = bd.totalAnnual / 12;
-
-            const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
-            const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
-            // Usamos 8 decimales para los precios para máxima precisión y trazabilidad.
-            const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
-            
-            // Colores corporativos en HEX (para el correo)
-            const DRK_DARK_BLUE = '#0c4a6e';
-            const DRK_BLUE = '#075985';
-            const DRK_LIGHT_BLUE = '#e0f2fe';
-            const GREEN = '#10b981';
-
-            // Estilos CSS para el desglose
-            const baseStyle = `font-family: Arial, sans-serif; font-size: 11px; line-height: 1.4; color: #555; max-width: 450px; margin: 0 auto; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background-color: #fff;`;
-            const headerStyle = `font-weight: bold; font-size: 13px; color: ${DRK_BLUE}; margin-top: 5px; border-left: 3px solid ${GREEN}; padding-left: 8px; margin-bottom: 5px;`;
-            const rowStyle = `display: flex; justify-content: space-between; margin-bottom: 2px;`;
-            const totalStyle = `font-weight: bold; color: white; padding: 5px 10px; margin-top: 5px; border-radius: 4px;`;
-            
-            // Contenido del desglose
-            // NOTA: Se usan etiquetas <table> simples para mayor compatibilidad con clientes de correo que ignoran 'display: flex'
-            return `
-                <table border="0" cellpadding="0" cellspacing="0" style="${baseStyle}">
-                    <tr>
-                        <td colspan="2"><h4 style="${headerStyle}">Cálculo Oficial de la Oferta - ${offer.name}</h4></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><p style="font-weight: bold; color: #333; margin-top: 10px;">TÉRMINO POTENCIA (Precio en €/kW Día)</p></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0;">P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP1Day)})</td>
-                        <td style="text-align: right; padding: 2px 0;">${num(bd.costP1,2)} €</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0;">P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP2Day)})</td>
-                        <td style="text-align: right; padding: 2px 0;">${num(bd.costP2,2)} €</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><p style="font-weight: bold; color: #333; margin-top: 10px;">TÉRMINO ENERGÍA (Precios en €/kWh)</p></td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0;">E1 (${num(bd.consumo_punta,0)} kWh x ${numPrice(offer.p1_price)})</td>
-                        <td style="text-align: right; padding: 2px 0;">${num(bd.costE1,2)} €</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0;">E2 (${num(bd.consumo_llano,0)} kWh x ${numPrice(offer.p2_price)})</td>
-                        <td style="text-align: right; padding: 2px 0;">${num(bd.costE2,2)} €</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0;">E3 (${num(bd.consumo_valle,0)} kWh x ${numPrice(offer.p3_price)})</td>
-                        <td style="text-align: right; padding: 2px 0;">${num(bd.costE3,2)} €</td>
-                    </tr>
-                    
-                    <tr>
-                        <td colspan="2" style="border-top: 1px solid #ddd; padding-top: 5px;"></td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; color: ${DRK_DARK_BLUE}; padding: 2px 0;">SUBTOTAL (P+E)</td>
-                        <td style="text-align: right; font-weight: bold; color: ${DRK_DARK_BLUE}; padding: 2px 0;">${num(bd.subBase,2)} €</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0;">Impuesto Eléc. (${num(bd.IE_RATE * 100, 3)}%)</td>
-                        <td style="text-align: right; padding: 2px 0;">${num(bd.costIE,2)} €</td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold; padding: 2px 0;">BASE IMPONIBLE</td>
-                        <td style="text-align: right; font-weight: bold; padding: 2px 0;">${num(bd.baseImp,2)} €</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 2px 0;">IVA (21%)</td>
-                        <td style="text-align: right; padding: 2px 0;">${num(bd.costIVA,2)} €</td>
-                    </tr>
-
-                    <tr>
-                        <td colspan="2" style="padding-top: 10px;">
-                            <div style="${totalStyle} background-color: ${DRK_DARK_BLUE}; font-size: 14px; text-align: center;">
-                                TOTAL MES (Estimado): ${eur(newMonthlyCost)}
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-            `;
-        }
-
-
         function renderResultsUI(offer, bd) {
-            const oldPeriodCost = bd.importe_total;
-            const newMonthlyCost = bd.totalAnnual / 12;
-            const savings = bd.savings;
-            const oldAnnual = bd.originalBillAnnual;
-
             const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
             const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
             const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
@@ -765,16 +422,16 @@
             els.cupsValue.textContent = bd.cups;
             els.bestOfferName.textContent = offer.name;
             els.bestOfferDesc.textContent = offer.description;
+            // Usamos el color corporativo para el ahorro en pantalla
+            const savingsColor = bd.savings >= 0 ? "text-drk-800" : "text-red-500"; 
+            els.savingsEstimate.textContent = eur(bd.savings);
+            els.savingsEstimate.className = `text-5xl font-black ${savingsColor} tracking-tight`;
             
-            els.savingsEstimate.textContent = eur(savings);
-            // El color del ahorro sigue siendo verde/rojo para indicar el resultado económico
-            els.savingsEstimate.className = savings >= 0 ? "text-5xl font-black text-green-500 tracking-tight" : "text-5xl font-black text-red-500 tracking-tight";
-            
-            els.oldPeriodCostDisplay.textContent = eur(oldPeriodCost);
+            els.oldPeriodCostDisplay.textContent = eur(bd.importe_total);
             els.oldPeriodDaysLabel.textContent = `Total Periodo (${bd.dias_facturados} días)`;
-            els.oldAnnualCostDisplay.textContent = eur(oldAnnual) + "/año";
+            els.oldAnnualCostDisplay.textContent = eur(bd.originalBillAnnual) + "/año";
             
-            els.newMonthlyCostDisplay.textContent = eur(newMonthlyCost) + "/mes";
+            els.newMonthlyCostDisplay.textContent = eur(bd.totalAnnual / 12) + "/mes";
             els.newAnnualCostDisplay.textContent = eur(bd.totalAnnual) + "/año";
 
             els.userConsumptionDetails.innerHTML = `
@@ -782,337 +439,245 @@
                     <div><p class="text-xs text-slate-500">Periodo</p><p class="font-bold text-slate-700">${bd.dias_facturados} días</p></div>
                     <div><p class="text-xs text-slate-500">Fechas</p><p class="font-bold text-slate-700">${bd.fechas}</p></div>
                     <div class="col-span-2 border-t pt-2 mt-2">
-                        <div class="flex justify-between text-xs mb-1"><span>E1 (Punta)</span><span class="font-mono">${num(bd.consumo_punta,0)} kWh</span></div>
-                        <div class="flex justify-between text-xs mb-1"><span>E2 (Llano)</span><span class="font-mono">${num(bd.consumo_llano,0)} kWh</span></div>
-                        <div class="flex justify-between text-xs mb-1"><span>E3 (Valle)</span><span class="font-mono">${num(bd.consumo_valle,0)} kWh</span></div>
-                        <div class="flex justify-between font-bold text-drk-800 mt-1"><span>Total Energía</span><span>${num(bd.consumo_total,0)} kWh</span></div>
+                        <div class="flex justify-between text-xs mb-1"><span>E1</span><span class="font-mono">${num(bd.consumo_punta,0)} kWh</span></div>
+                        <div class="flex justify-between text-xs mb-1"><span>E2</span><span class="font-mono">${num(bd.consumo_llano,0)} kWh</span></div>
+                        <div class="flex justify-between text-xs mb-1"><span>E3</span><span class="font-mono">${num(bd.consumo_valle,0)} kWh</span></div>
+                        <div class="flex justify-between font-bold text-drk-800 mt-1"><span>Total</span><span>${num(bd.consumo_total,0)} kWh</span></div>
                     </div>
                 </div>
             `;
 
-            // Renderizado del desglose DENTRO DEL CANVAS
-            // Aquí se usa Tailwind, no se necesita la lógica inline del generateBreakdownHtml
             els.costBreakdown.innerHTML = `
                 <div class="bg-white p-6 font-mono text-xs md:text-sm text-slate-600 leading-relaxed">
                     <div class="text-center border-b-2 border-dashed border-slate-300 pb-4 mb-4">
                         <h4 class="font-bold text-lg text-slate-800 uppercase">${offer.name}</h4>
-                        <p>Simulación para ${bd.dias_facturados} días</p>
+                        <p>Simulación ${bd.dias_facturados} días</p>
                     </div>
-
-                    <!-- Potencia -->
                     <div class="mb-4">
-                        <p class="font-bold text-slate-800 mb-1">TÉRMINO POTENCIA (Precio en €/kW Año)</p>
-                        <div class="flex justify-between">
-                            <!-- Precio P1 Diario calculado, usando 8 decimales para trazabilidad -->
-                            <span>P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP1Day)})</span>
-                            <span>${num(bd.costP1,2)} €</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <!-- Precio P2 Diario calculado, usando 8 decimales para trazabilidad -->
-                            <span>P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${numPrice(bd.priceP2Day)})</span>
-                            <span>${num(bd.costP2,2)} €</span>
-                        </div>
+                        <p class="font-bold text-slate-800 mb-1">POTENCIA (€/kW Año)</p>
+                        <div class="flex justify-between"><span>P1 (${num(bd.potencia_p1_kw,2)} kW x ${numPrice(bd.priceP1Day)})</span><span>${num(bd.costP1,2)} €</span></div>
+                        <div class="flex justify-between"><span>P2 (${num(bd.potencia_p2_kw,2)} kW x ${numPrice(bd.priceP2Day)})</span><span>${num(bd.costP2,2)} €</span></div>
                     </div>
-
-                    <!-- Energía -->
                     <div class="mb-4">
-                        <p class="font-bold text-slate-800 mb-1">TÉRMINO ENERGÍA (Precios en €/kWh)</p>
+                        <p class="font-bold text-slate-800 mb-1">ENERGÍA (€/kWh)</p>
                         <div class="flex justify-between"><span>E1 (${num(bd.consumo_punta,0)} kWh x ${numPrice(offer.p1_price)})</span><span>${num(bd.costE1,2)} €</span></div>
                         <div class="flex justify-between"><span>E2 (${num(bd.consumo_llano,0)} kWh x ${numPrice(offer.p2_price)})</span><span>${num(bd.costE2,2)} €</span></div>
                         <div class="flex justify-between"><span>E3 (${num(bd.consumo_valle,0)} kWh x ${numPrice(offer.p3_price)})</span><span>${num(bd.costE3,2)} €</span></div>
                     </div>
-
-                    <!-- Impuestos -->
                     <div class="border-t border-slate-200 pt-2 mb-2">
-                        <div class="flex justify-between font-bold text-slate-800"><span>SUBTOTAL (P+E)</span><span>${num(bd.subBase,2)} €</span></div>
-                        <div class="flex justify-between"><span>Impuesto Eléc. (${num(bd.IE_RATE * 100, 3)}%)</span><span>${num(bd.costIE,2)} €</span></div>
-                        <div class="flex justify-between font-bold mt-1"><span>BASE IMPONIBLE</span><span>${num(bd.baseImp,2)} €</span></div>
-                        <div class="flex justify-between"><span>IVA (21%)</span><span>${num(bd.costIVA,2)} €</span></div>
+                        <div class="flex justify-between font-bold text-slate-800"><span>SUBTOTAL</span><span>${num(bd.subBase,2)} €</span></div>
+                        <div class="flex justify-between"><span>Imp. Eléc.</span><span>${num(bd.costIE,2)} €</span></div>
+                        <div class="flex justify-between font-bold"><span>BASE</span><span>${num(bd.baseImp,2)} €</span></div>
+                        <div class="flex justify-between"><span>IVA</span><span>${num(bd.costIVA,2)} €</span></div>
                     </div>
-
-                    <!-- Totales (Periodo, Mes, Año) -->
-                    <div class="border-t border-slate-200 pt-2 mb-2">
-                         <div class="flex justify-between font-bold text-slate-800 mb-1">
-                            <span>TOTAL PERIODO (${bd.dias_facturados} días)</span>
-                            <span>${eur(bd.totalPeriod)}</span>
-                        </div>
-                    </div>
-                    <!-- DRK-900 (Azul Oscuro) -->
-                    <div class="bg-drk-900 text-white p-3 rounded-lg flex justify-between items-center text-md font-bold mb-1">
-                        <span>TOTAL MES (Estimado)</span>
-                        <span>${eur(newMonthlyCost)}</span>
-                    </div>
-                    <!-- DRK-600 (Azul Brillante) -->
-                    <div class="bg-drk-600 text-white p-3 rounded-lg flex justify-between items-center text-lg font-bold">
-                        <span>TOTAL ANUAL (Proyección)</span>
-                        <span>${eur(bd.totalAnnual)}</span>
-                    </div>
+                    <div class="bg-drk-900 text-white p-3 rounded-lg flex justify-between items-center text-md font-bold mb-1"><span>TOTAL MES</span><span>${eur(bd.totalAnnual / 12)}</span></div>
                 </div>
             `;
-            
-            // --- CÓDIGO DEBUG PARA VERIFICACIÓN DE DATOS CARGADOS (AÚN INVISIBLE) ---
-            els.debugOfferName.textContent = `Tarifa Ganadora: ${offer.name}`;
-            els.debugP1Annual.textContent = `P1 ANUAL: ${numPrice(offer.p_potencia_1)} €/kW año`;
-            els.debugP2Annual.textContent = `P2 ANUAL: ${numPrice(offer.p_potencia_2)} €/kW año`;
-            els.debugE1Price.textContent = `E1 (Punta): ${numPrice(offer.p1_price)} €/kWh`;
-            els.debugE2Price.textContent = `E2 (Llano): ${numPrice(offer.p2_price)} €/kWh`;
-            els.debugE3Price.textContent = `E3 (Valle): ${numPrice(offer.p3_price)} €/kWh`;
-            // --------------------------------------------------------
         }
 
-        // --- LÓGICA DE COPIA DE OFERTA (REEMPLAZA ENVÍO DIRECTO) ---
-
-        // Función que genera el TEXTO PLANO FORMATEADO para el portapapeles (FALLBACK)
-        function generatePlainTextOffer(commercialCode) {
-             if (!lastComparisonResult) return "";
-            const bd = lastComparisonResult;
-            const offer = bd.offer;
-            const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
-            const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
-            const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
-            
-            // Obtener valores de pre-relleno del modal
-            const clientName = els.clientNameInput.value.trim() || '__________';
-            const clientPhone = els.clientPhoneInput.value.trim() || '__________';
-            const clientEmail = els.clientEmailInput.value.trim() || '__________';
-
-            // Generar el cuerpo de texto plano con toda la información clave
-            return `
-===========================================
-⭐ RESUMEN DE OFERTA DRK ENERGÍA ⭐
-===========================================
-
-TARIFA SELECCIONADA: ${offer.name} (${offer.description})
-
-CLIENTE:
-- Nombre: ${clientName}
-- Teléfono: ${clientPhone}
-- Email: ${clientEmail}
-- CUPS: ${bd.cups}
-
-RESULTADO DEL ESTUDIO:
-- Ahorro Anual Estimado: ${eur(bd.savings)}
-- Coste Mensual Estimado: ${eur(bd.totalAnnual / 12)}
-- Coste Anual Proyectado: ${eur(bd.totalAnnual)}
-- Factura Actual Anual: ${eur(bd.originalBillAnnual)}
-
-DETALLES DE PRECIOS DE LA OFERTA (€):
-- P1 (Potencia - €/kW/día): ${numPrice(bd.priceP1Day)}
-- P2 (Potencia - €/kW/día): ${numPrice(bd.priceP2Day)}
-- E1 (Punta - €/kWh): ${numPrice(offer.p1_price)}
-- E2 (Llano - €/kWh): ${numPrice(offer.p2_price)}
-- E3 (Valle - €/kWh): ${numPrice(offer.p3_price)}
-
-===========================================
-CÓDIGO COMERCIAL: ${commercialCode}
-===========================================
-
-INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
-1. Copie el texto de la oferta HTML (el maquetado).
-2. Péguelo en una aplicación de notas (como Google Keep o Apple Notes).
-3. Vuelva a copiar el texto desde la aplicación de notas y péguelo en el email. Esto suele forzar la inclusión del formato HTML completo en el portapapeles del móvil.
-`;
-        }
-
-        // Función que genera el HTML maquetado listo para pegar en el cliente de correo
+        // GENERADOR DE HTML PARA COPIAR (Diseño PDF DETALLADO)
         function generateStyledHtmlOffer(commercialCode) {
-            if (!lastComparisonResult) {
-                throw new Error("No hay resultados de comparación.");
-            }
-
             const bd = lastComparisonResult;
             const offer = bd.offer;
-
-            // Funciones de formato
             const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
             const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+            // Usamos 8 decimales para los precios en el desglose
             const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
+            const numPriceFormula = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(n);
             
-            // Colores corporativos en HEX para HTML incrustado en mailto:
-            const DRK_DARK_BLUE = '#0c4a6e'; // DRK-900
-            const DRK_BLUE = '#075985';     // DRK-800
-            const DRK_LIGHT_BLUE = '#e0f2fe'; // DRK-100
-            const CTA_RED_COLOR = '#CC0000';  // CTA-RED-500
-            const GREEN_SAVE = '#10b981';    // Verde para ahorro
-            // Correos de la empresa
-            const COMPANY_EMAILS = 'f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es'; 
+            // Colores DRK
+            const BLUE_DARK = '#0c4a6e'; 
+            const BLUE_MED = '#075985';
+            const BLUE_CTA = '#0284c7'; // Usaremos el Azul CTA/600 para el ahorro
+            const RED_CTA = '#CC0000';
+            const BG_LIGHT = '#f0f9ff';
 
-            // Obtener valores de pre-relleno del modal
-            const clientName = els.clientNameInput.value.trim() || '[ESCRIBA AQUÍ SU NOMBRE COMPLETO]';
-            const clientPhone = els.clientPhoneInput.value.trim() || '[ESCRIBA AQUÍ SU NÚMERO DE TELÉFONO]';
-            const clientEmail = els.clientEmailInput.value.trim() || '[ESTE ES EL EMAIL DEL CLIENTE]';
+            const clientName = els.clientNameInput.value.trim() || '__________';
+            const formalizationLink = `mailto:f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es?subject=${encodeURIComponent(`ACEPTACIÓN OFERTA ${bd.cups}`)}&body=${encodeURIComponent(`Hola, acepto la oferta para el CUPS ${bd.cups}. Nombre: ${clientName}`)}`;
 
+            // Estilos CSS Inline para máxima compatibilidad
+            const tableMain = `width: 600px; max-width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; border: 1px solid #ddd; margin: 0 auto; background: white;`;
+            const headerCell = `background-color: ${BLUE_DARK}; color: white; padding: 15px; text-align: center;`;
+            const sectionTitle = `background-color: ${BLUE_MED}; color: white; font-weight: bold; padding: 8px; font-size: 14px; margin-top: 10px;`;
+            const rowLabel = `padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; color: #555;`;
+            const rowValue = `padding: 8px; border-bottom: 1px solid #eee; font-size: 13px; font-weight: bold; color: #333; text-align: right;`;
+            // CAJA DE AHORRO CON COLOR AZUL CORPORATIVO (BLUE_CTA)
+            const savingsBox = `background-color: ${BLUE_CTA}; color: white; font-size: 20px; font-weight: bold; padding: 15px; text-align: center; border-radius: 8px; margin: 15px 0;`;
+            const btnStyle = `display: inline-block; background-color: ${RED_CTA}; color: white; padding: 12px 24px; text-decoration: none; font-weight: bold; border-radius: 6px; margin: 20px 0; font-size: 16px;`;
+            const footerStyle = `background-color: ${BLUE_MED}; height: 5px; margin-top: 10px; border-radius: 0 0 8px 8px;`;
 
-            // --- 1. Generar Enlace de Formalización (El que va en el botón "QUIERO LA OFERTA")
-            
-            // Sección de Precios DRK (Nueva Información Adicional para la empresa) - Solo para el cuerpo del correo
-            const pricingDetails = 
-                `--- DATOS DE LA OFERTA ---\n\n` +
-                `Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name} (2.0TD)\n` +
-                `Zona Geográfica: PENINSULA\n` +
-                `Ahorro Anual Estimado: ${eur(bd.savings)}\n` +
-                `Total Mensual Estimado: ${eur(bd.totalAnnual / 12)}\n` +
-                `Consumo Total Facturado: ${num(bd.consumo_total, 0)} kWh\n\n` +
-                `--- DETALLE DE PRECIOS (€) ---\n` +
-                `P1 (Potencia - €/kW/día): ${numPrice(bd.priceP1Day)}\n` +
-                `P2 (Potencia - €/kW/día): ${numPrice(bd.priceP2Day)}\n` +
-                `E1 (Energía - €/kWh): ${numPrice(offer.p1_price)}\n` +
-                `E2 (Energía - €/kWh): ${numPrice(offer.p2_price)}\n` +
-                `E3 (Energía - €/kWh): ${numPrice(offer.p3_price)}\n` +
-                `------------------------------\n`;
-
-            // Usamos saltos de línea codificados (%0D%0A) y el pre-relleno
-            const formalizationBody = 
-                `Hola equipo de Contratación DRK,%0D%0A%0D%0A` +
-                `Confirmo que deseo aceptar la oferta de ahorro con CUPS: ${bd.cups}.%0D%0A%0D%0A` +
-                `${pricingDetails.replace(/\n/g, '%0D%0A')}%0D%0A` + // Insertamos los detalles de la oferta para la empresa
-                `Por favor, utilicen los siguientes datos para tramitar mi cambio:%0D%0A` +
-                `--------------------------------------------------------%0D%0A` +
-                `DATOS DEL CLIENTE (A RELLENAR):%0D%0A` +
-                `--------------------------------------------------------%0D%0A` +
-                `Nombre completo: ${clientName}%0D%0A` +
-                `Teléfono de contacto: ${clientPhone}%0D%0A` +
-                `Email de contacto: ${clientEmail}%0D%0A%0D%0A` +
-                `--------------------------------------------------------%0D%0A` +
-                `INFORMACIÓN ADICIONAL (Opcional):%0D%0A` +
-                `--------------------------------------------------------%0D%0A` +
-                `[AGREGUE CUALQUIER COMENTARIO EXTRA AQUÍ]%0D%0A%0D%0A` +
-                `--- DOCUMENTACIÓN REQUERIDA ---%0D%0A` +
-                `Para formalizar el contrato, por favor, responde a este email adjuntando:%0D%0A` +
-                `1. Foto del DNI/CIF (anverso y reverso).%0D%0A` +
-                `2. Última factura (mínimo 3 meses de antigüedad).%0D%0A` +
-                `3. Email de contacto para validación.%0D%0A` +
-                `4. Teléfono de contacto.%0D%0A` +
-                `5. Número de cuenta bancaria (IBAN).%0D%0A%0D%0A` +
-                `Adjunto la documentación requerida.%0D%0A%0D%0A` +
-                `Gracias,%0D%0A` +
-                `[SU NOMBRE]`;
+            // DETALLE DE LA FÓRMULA DEL DESGLOSE
+            const desgloseRows = `
+                <!-- TÉRMINO POTENCIA -->
+                <tr><td colspan="2"><div style="font-weight: bold; color: ${BLUE_MED}; padding: 5px 0 2px 0;">TÉRMINO POTENCIA (Precio en €/kW Día)</div></td></tr>
+                <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${numPriceFormula(bd.priceP1Day)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costP1, 2)} €</td></tr>
+                <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${numPriceFormula(bd.priceP2Day)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costP2, 2)} €</td></tr>
                 
-            // El mailto ahora apunta a los tres correos de la empresa
-            const formalizationLink = `mailto:${COMPANY_EMAILS}?subject=${encodeURIComponent(`ACEPTACIÓN OFERTA - CUPS ${bd.cups}`)}&body=${formalizationBody}`;
-
-            // --- 2. Construir el HTML del Desglose Completo (Misma lógica que la UI, pero con estilos inline)
-            
-            const breakdownHtml = generateBreakdownHtml(offer, bd);
-
-
-            // --- 3. Construir el cuerpo HTML PRINCIPAL (Maquetado y listo para copiar)
-            
-            // Estilos para la tabla principal
-            const tableStyle = `border-collapse: collapse; width: 100%; max-width: 450px; margin: 15px auto; font-family: Arial, sans-serif;`;
-            const headerStyle = `background-color: ${DRK_DARK_BLUE}; color: white; padding: 10px; font-weight: bold; font-size: 16px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;`;
-            const rowStyle = `padding: 10px 15px; border-bottom: 1px solid #eee; font-size: 13px;`;
-            const highlightStyle = `background-color: ${DRK_LIGHT_BLUE}; color: ${DRK_BLUE}; font-weight: bold;`;
-            const buttonStyle = `display: inline-block; padding: 12px 25px; margin: 15px auto; background-color: ${CTA_RED_COLOR}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; border: none; text-align: center; font-size: 16px;`;
-
-            // HTML que se copiará al portapapeles
-            let htmlContent = `
-                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; padding: 10px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-                    <h3 style="color: ${DRK_DARK_BLUE}; margin-bottom: 20px; text-align: center;">
-                        ⭐ RESUMEN OFERTA DE AHORRO DRK ENERGÍA ⭐
-                    </h3>
-                    
-                    <!-- TABLA PRINCIPAL RESUMEN -->
-                    <table border="0" cellpadding="0" cellspacing="0" style="${tableStyle} border: 1px solid ${DRK_BLUE}; border-radius: 8px; overflow: hidden;">
-                        <tr><td colspan="2" style="${headerStyle}">TU NUEVA TARIFA: ${offer.name}</td></tr>
-                        
-                        <tr><td style="${rowStyle} width: 50%;">CUPS de Suministro:</td><td style="${rowStyle} font-weight: bold;">${bd.cups}</td></tr>
-                        
-                        <tr><td style="${rowStyle} ${highlightStyle}">&#128176; AHORRO ANUAL ESTIMADO:</td><td style="${rowStyle} ${highlightStyle} color: ${bd.savings >= 0 ? GREEN_SAVE : CTA_RED_COLOR}; font-size: 16px;">${eur(bd.savings)}</td></tr>
-                        
-                        <tr><td style="${rowStyle}">Proyección Coste Mensual:</td><td style="${rowStyle} font-weight: bold; font-size: 16px;">${eur(bd.totalAnnual / 12)}</td></tr>
-                    </table>
-
-                    <h3 style="color: ${DRK_BLUE}; margin-top: 30px; margin-bottom: 10px; text-align: center; font-size: 18px;">
-                        DESGLOSE COMPLETO DEL CÁLCULO
-                    </h3>
-
-                    <!-- DESGLOSE DETALLADO INCLUIDO (Contenido de breakdownHtml) -->
-                    ${breakdownHtml}
-
-                    <p style="margin-top: 35px; margin-bottom: 15px; font-size: 14px; text-align: center; color: ${DRK_BLUE}; font-weight: bold;">
-                        ¿ACEPTA LA OFERTA Y QUIERE EMPEZAR A AHORRAR?
-                    </p>
-
-                    <p style="text-align: center; padding: 0 10px 10px 10px;">
-                        <a href="${formalizationLink}" style="${buttonStyle}">QUIERO LA OFERTA</a>
-                    </p>
-                    
-                    <p style="font-size: 10px; color: #888; margin-top: 20px; text-align: center;">
-                        [Colaborador: ${commercialCode}] | Este resumen es una simulación basada en su última factura.
-                    </p>
-                </div>
+                <!-- TÉRMINO ENERGÍA -->
+                <tr><td colspan="2"><div style="font-weight: bold; color: ${BLUE_MED}; padding: 5px 0 2px 0;">TÉRMINO ENERGÍA (Precios en €/kWh)</div></td></tr>
+                <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">E1 (${num(bd.consumo_punta,0)} kWh x ${numPriceFormula(offer.p1_price)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costE1, 2)} €</td></tr>
+                <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">E2 (${num(bd.consumo_llano,0)} kWh x ${numPriceFormula(offer.p2_price)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costE2, 2)} €</td></tr>
+                <tr><td style="${rowLabel} font-family: monospace; font-size: 12px;">E3 (${num(bd.consumo_valle,0)} kWh x ${numPriceFormula(offer.p3_price)})</td><td style="${rowValue} font-family: monospace; font-size: 12px;">${num(bd.costE3, 2)} €</td></tr>
+                
+                <!-- SUBTOTALES E IMPUESTOS -->
+                <tr><td style="${rowLabel} border-top: 2px solid #333; font-weight: bold; color: ${BLUE_DARK};">SUBTOTAL (P+E)</td><td style="${rowValue} border-top: 2px solid #333; font-weight: bold; color: ${BLUE_DARK};">${num(bd.subBase, 2)} €</td></tr>
+                <tr><td style="${rowLabel}">Impuesto Eléc. (${num(bd.IE_RATE * 100, 3)}%)</td><td style="${rowValue}">${num(bd.costIE, 2)} €</td></tr>
+                <tr><td style="${rowLabel} font-weight: bold;">BASE IMPONIBLE</td><td style="${rowValue} font-weight: bold;">${num(bd.baseImp, 2)} €</td></tr>
+                <tr><td style="${rowLabel}">IVA (21%)</td><td style="${rowValue}">${num(bd.costIVA, 2)} €</td></tr>
+                
+                <!-- TOTALES FINALES (TOTAL MES Y TOTAL AÑO) -->
+                <tr><td style="${rowLabel} background-color: #eee; font-weight: bold;">TOTAL MES (PERIODO FACTURADO - ${bd.dias_facturados} DÍAS)</td><td style="${rowValue} background-color: #eee; font-size: 16px;">${eur(bd.totalPeriod)}</td></tr>
+                 <!-- LÍNEA DE TOTAL AÑO -->
+                <tr><td style="${rowLabel} background-color: #eee; font-weight: bold;">TOTAL AÑO (PROYECTADO)</td><td style="${rowValue} background-color: #eee; font-size: 16px;">${eur(bd.totalAnnual)}</td></tr>
             `;
             
-            return htmlContent;
+            // TABLA DE RESUMEN DE PRECIOS UNITARIOS
+            const preciosResumenTable = `
+                <tr><td colspan="2"><div style="${sectionTitle}">RESUMEN DE PRECIOS DE LA OFERTA ÚNICA</div></td></tr>
+                <tr><td colspan="2" style="padding: 0;">
+                    <table width="100%" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; font-size: 12px;">
+                        <tr style="background-color: #f5f5f5;">
+                            <th style="padding: 5px 8px; text-align: left; color: ${BLUE_DARK};">CONCEPTO</th>
+                            <th style="padding: 5px 8px; text-align: right; color: ${BLUE_DARK};">DRK ENERGÍA</th>
+                        </tr>
+                        <tr><td style="padding: 5px 8px; border-bottom: 1px solid #eee;">Potencia P1 (€/kW/día)</td><td style="padding: 5px 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">${numPriceFormula(bd.priceP1Day)}</td></tr>
+                        <tr><td style="padding: 5px 8px; border-bottom: 1px solid #eee;">Potencia P2 (€/kW/día)</td><td style="padding: 5px 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">${numPriceFormula(bd.priceP2Day)}</td></tr>
+                        <tr><td style="padding: 5px 8px; border-bottom: 1px solid #eee;">Energía E1 (€/kWh)</td><td style="padding: 5px 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">${numPriceFormula(offer.p1_price)}</td></tr>
+                        <tr><td style="padding: 5px 8px; border-bottom: 1px solid #eee;">Energía E2 (€/kWh)</td><td style="padding: 5px 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">${numPriceFormula(offer.p2_price)}</td></tr>
+                        <tr><td style="padding: 5px 8px; border-bottom: 1px solid #eee;">Energía E3 (€/kWh)</td><td style="padding: 5px 8px; border-bottom: 1px solid #eee; text-align: right; font-weight: bold;">${numPriceFormula(offer.p3_price)}</td></tr>
+                        <tr style="background-color: ${BG_LIGHT}; font-weight: bold;"><td style="padding: 8px; color: ${BLUE_DARK};">AHORRO ANUAL</td><td style="padding: 8px; text-align: right; font-size: 14px; color: ${BLUE_CTA};">${eur(bd.savings)}</td></tr>
+                        <!-- ESPACIO SOLICITADO -->
+                        <tr style="background-color: white; height: 10px;"><td colspan="2"></td></tr>
+                    </table>
+                </td></tr>
+            `;
+            
+            // NUEVO RESUMEN DE AHORRO AL FINAL
+            const finalSavingsSummary = `
+                <tr><td colspan="2" style="padding: 0 20px 0 20px; text-align: center;">
+                    <div style="text-align: center; margin: 15px 0 5px 0;">
+                        <p style="margin: 0; font-size: 16px; color: ${BLUE_DARK}; font-weight: bold;">RESUMEN DE AHORRO FINAL</p>
+                    </div>
+                    <div style="background-color: ${BG_LIGHT}; padding: 15px; border-radius: 8px; border: 1px solid #ddd; margin-bottom: 20px;">
+                        <p style="margin: 0; font-size: 14px; color: #555;">TU AHORRO ANUAL ESTIMADO ES:</p>
+                        <span style="font-size: 32px; font-weight: bold; color: ${BLUE_CTA}; display: block; margin-top: 5px;">${eur(bd.savings)}</span>
+                    </div>
+                </td></tr>
+            `;
+
+
+            return `
+                <table cellpadding="0" cellspacing="0" style="${tableMain}">
+                    <!-- HEADER -->
+                    <tr><td colspan="2" style="${headerCell}">
+                        <h1 style="margin:0; font-size: 24px;">ESTUDIO DE AHORRO</h1>
+                        <p style="margin:5px 0 0 0; font-size: 14px; opacity: 0.9;">COMPARATIVA PROFESIONAL - DRK ENERGÍA</p>
+                    </td></tr>
+                    
+                    <!-- DATOS CLIENTE -->
+                    <tr><td colspan="2" style="padding: 15px;">
+                        <p style="margin: 0; font-size: 13px;"><strong>CLIENTE:</strong> ${clientName}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;"><strong>CUPS:</strong> ${bd.cups}</p>
+                        <p style="margin: 5px 0 0 0; font-size: 13px;"><strong>COMERCIAL:</strong> ${els.comercialCodeInput.value || 'N/A'}</p>
+                    </td></tr>
+
+                    <!-- TARIFA GANADORA -->
+                    <tr><td colspan="2" style="background-color: ${BG_LIGHT}; padding: 15px; text-align: center; border-top: 2px solid ${BLUE_MED}; border-bottom: 2px solid ${BLUE_MED};">
+                        <p style="margin: 0; color: ${BLUE_MED}; font-size: 12px; font-weight: bold; letter-spacing: 1px;">LA MEJOR OPCIÓN PARA TI ES</p>
+                        <h2 style="margin: 5px 0 0 0; color: ${BLUE_DARK}; font-size: 22px;">${offer.name}</h2>
+                    </td></tr>
+
+                    <!-- AHORRO (RESUMEN POTENTE INICIAL) -->
+                    <tr><td colspan="2" style="padding: 0 20px;">
+                        <div style="text-align: center; margin: 25px 0 10px 0;">
+                            <p style="margin: 0; font-size: 16px; color: #555; font-weight: bold;">TU AHORRO ANUAL ESTIMADO ES:</p>
+                        </div>
+                        <div style="${savingsBox}">
+                            <span style="font-size: 38px;">${eur(bd.savings)}</span>
+                            <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold;">¡CONSIGUE TU AHORRO ANUAL!</p>
+                        </div>
+                    </td></tr>
+
+                    <!-- TABLA DE RESUMEN DE PRECIOS -->
+                    ${preciosResumenTable}
+
+                    <!-- COMPARATIVA (Se mantiene el formato lado a lado, pero se añade Total Anual) -->
+                    <tr><td colspan="2" style="padding: 0 20px;">
+                        <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
+                            <tr>
+                                <td style="width: 50%; padding: 15px; background-color: #f9fafb; border: 1px solid #ddd; text-align: center; vertical-align: top;">
+                                    <div style="font-size: 11px; font-weight: bold; color: #888; text-transform: uppercase;">TU FACTURA ACTUAL</div>
+                                    <div style="font-size: 20px; font-weight: bold; color: #ef4444; margin: 5px 0; text-decoration: line-through;">${eur(bd.originalBillAnnual)}</div>
+                                    <div style="font-size: 11px; color: #666;">/ AÑO</div>
+                                </td>
+                                <td style="width: 50%; padding: 15px; background-color: ${BG_LIGHT}; border: 1px solid ${BLUE_MED}; text-align: center; vertical-align: top;">
+                                    <div style="font-size: 11px; font-weight: bold; color: ${BLUE_MED}; text-transform: uppercase;">TU NUEVO COSTE DRK</div>
+                                    <div style="font-size: 24px; font-weight: bold; color: ${BLUE_DARK}; margin: 5px 0;">${eur(bd.totalAnnual)}</div>
+                                    <div style="font-size: 11px; color: ${BLUE_MED};">/ AÑO</div>
+                                    <div style="font-size: 13px; font-weight: bold; color: ${BLUE_DARK}; margin-top: 5px;">${eur(bd.totalAnnual/12)} / MES</div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td></tr>
+
+                    <!-- DESGLOSE DETALLADO -->
+                    <tr><td colspan="2"><div style="${sectionTitle}">DESGLOSE DETALLADO DE LA SIMULACIÓN (${offer.name})</div></td></tr>
+                    ${desgloseRows}
+                    
+                    <!-- NUEVO RESUMEN DE AHORRO AL FINAL (Solicitado) -->
+                    ${finalSavingsSummary}
+
+                    <!-- CTA -->
+                    <tr><td colspan="2" style="text-align: center; padding: 0 20px 20px 20px;">
+                        <a href="${formalizationLink}" style="${btnStyle}">QUIERO LA OFERTA</a>
+                        <p style="font-size: 10px; color: #999; margin-top: 10px;">[Colaborador: ${commercialCode}] | Este resumen es una simulación basada en su última factura.</p>
+                    </td></tr>
+
+                    <!-- PIE DE PÁGINA BONITO -->
+                    <tr><td colspan="2" style="padding: 0; height: 10px;"><div style="${footerStyle}"></div></td></tr>
+                </table>
+            `;
         }
 
-
-        // Función que gestiona la copia al portapapeles
         async function handleCopyOffer() {
+            if (!lastComparisonResult) return window.showErrorModal("Primero realice una comparación.");
+            
             const commercialCode = els.comercialCodeInput.value.trim();
-
-            if (!commercialCode) {
-                return window.showErrorModal("Por favor, rellene el Código de Colaborador.");
-            }
-            if (!lastComparisonResult) {
-                return window.showErrorModal("Error: No hay una oferta calculada para copiar.");
-            }
+            if (!commercialCode) return window.showErrorModal("Indique el Código Comercial.");
 
             try {
                 const htmlContent = generateStyledHtmlOffer(commercialCode);
                 
-                // --- LÓGICA: COPIA ENRIQUECIDA (HTML) ---
-                
-                // 1. Crear elemento temporal y llenarlo con el HTML
+                // Intento de copia HTML enriquecido
                 const tempElement = document.createElement('div');
-                tempElement.style.position = 'absolute';
-                tempElement.style.left = '-9999px';
-                // Añadimos un atributo de contenido editable para mejorar la compatibilidad en algunos entornos
-                tempElement.setAttribute('contenteditable', 'true');
+                tempElement.contentEditable = true;
                 tempElement.innerHTML = htmlContent;
+                tempElement.style.position = 'fixed';
+                tempElement.style.left = '-9999px';
                 document.body.appendChild(tempElement);
                 
-                // 2. Seleccionar el contenido (se requiere focus para document.execCommand)
                 const range = document.createRange();
                 range.selectNodeContents(tempElement);
-                const selection = window.getSelection();
-                selection.removeAllRanges();
-                selection.addRange(range);
+                const sel = window.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
                 
-                // 3. Ejecutar comando de copia (Funciona para HTML en la mayoría de clientes de correo en PC/Mac)
-                let success = false;
-                try {
-                    success = document.execCommand('copy');
-                } catch (err) {
-                    console.error('Copy command failed (execCommand):', err);
-                }
-                
-                // 4. Limpiar
-                selection.removeAllRanges();
+                let success = document.execCommand('copy');
                 document.body.removeChild(tempElement);
 
                 if (success) {
-                    window.showMessageModal(`✅ ¡Copiado! Ahora **pegue (Ctrl+V o Cmd+V)** el contenido MAQUETADO en el cuerpo de su email. Código: ${commercialCode}`);
+                    window.showMessageModal("✅ ¡Oferta copiada con éxito! Pegue en su email (Ctrl+V o Cmd+V).");
+                    els.sendOfferModal.classList.add('hidden');
                 } else {
-                    // PLAN B (Para móviles): Intentar copia moderna y mostrar instrucción manual
-                    const plainTextContent = generatePlainTextOffer(commercialCode);
-                    await navigator.clipboard.writeText(plainTextContent);
-                    
-                     window.showErrorModal(`⚠️ Aviso: La copia automática de formato falló en este dispositivo (móvil). Se copió el texto en formato simple. Por favor, **mantenga pulsado y seleccione 'Pegar'** en el cuerpo del correo, o si el formato maquetado no aparece, pegue el texto en Notas y cópielo de nuevo para forzar el formato HTML en iOS/Android.`);
+                    // Si falla (móviles/iOS), notificamos el fallo de la copia enriquecida.
+                    window.showErrorModal("No se pudo copiar el diseño visual (limitación del dispositivo). Intente desde un PC.");
                 }
-                
-                // Oculta el modal
-                els.sendOfferModal.classList.add('hidden');
-                
             } catch (e) {
                 console.error("Error al copiar al portapapeles:", e);
-                window.showErrorModal(`Error de Portapapeles: No se pudo copiar el texto. Su navegador necesita permiso o la API de copia falló. (Error: ${e.message})`);
+                window.showErrorModal(`Error de Portapapeles: ${e.message}`);
             }
         }
 
-        // --- MANEJO DE VISTAS Y UTILS ---
-        
         function showView(viewId) {
             document.getElementById('initial-view').classList.add('hidden');
             document.getElementById('results-view').classList.add('hidden');
@@ -1123,15 +688,13 @@ INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
             if(viewId === 'results-view') target.classList.add('animate-fade-in-up');
         }
         window.showErrorModal = (msg) => {
-            document.getElementById('error-title').textContent = "¡Ups! Algo salió mal";
-            document.getElementById('error-icon').className = "w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4";
-            document.getElementById('error-icon').innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+            document.getElementById('error-title').textContent = "¡Atención!";
             document.getElementById('error-message').textContent = msg;
             document.getElementById('error-modal').classList.remove('hidden');
             document.getElementById('error-modal').classList.add('flex');
         }
         window.showMessageModal = (msg) => {
-             document.getElementById('error-title').textContent = "Operación Exitosa";
+             document.getElementById('error-title').textContent = "Éxito";
              document.getElementById('error-icon').className = "w-12 h-12 bg-drk-100 text-drk-500 rounded-full flex items-center justify-center mx-auto mb-4";
              document.getElementById('error-icon').innerHTML = '<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
              document.getElementById('error-message').textContent = msg;
@@ -1141,20 +704,17 @@ INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
         window.hideErrorModal = () => {
             document.getElementById('error-modal').classList.add('hidden');
             document.getElementById('error-modal').classList.remove('flex');
-            document.getElementById('error-title').textContent = "¡Ups! Algo salió mal";
-            document.getElementById('error-icon').className = "w-12 h-12 bg-red-100 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4";
         }
         window.resetApp = () => {
             stopScanner();
-            lastComparisonResult = null; // Resetear resultado al volver a empezar
+            lastComparisonResult = null;
             showView('initial-view');
             els.loadingStatus.classList.add('hidden');
             els.startScanBtn.disabled = false;
             els.uploadMenuBtn.disabled = false; 
         };
-        // Funciones de escáner y utils (Mantenidas)
         function startScanner() {
-            if (currentTariffs.length === 0) return window.showErrorModal("Primero debe cargar las tarifas.");
+            if (currentTariffs.length === 0) return window.showErrorModal("Cargando tarifas, espere...");
             if (scannerRunning) return;
             showView('scanner-view');
             scannerRunning = true;
@@ -1165,37 +725,22 @@ INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
             canvasCtx = canvas.getContext('2d');
             els.interactiveViewport.innerHTML = '';
             els.interactiveViewport.appendChild(video);
-            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
-                .then(s => {
-                    stream = s;
-                    video.srcObject = stream;
-                    video.onloadedmetadata = () => { video.play(); scanLoop(); };
-                })
-                .catch(err => {
-                    console.error(err);
-                    stopScanner();
-                    window.showErrorModal("No se pudo acceder a la cámara.");
-                    window.resetApp();
-                });
+            navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } }).then(s => {
+                stream = s; video.srcObject = stream;
+                video.onloadedmetadata = () => { video.play(); scanLoop(); };
+            }).catch(err => {
+                console.error(err); stopScanner();
+                window.showErrorModal("Error al acceder a la cámara.");
+                window.resetApp();
+            });
         }
         function scanLoop() {
-            if (!scannerRunning || !video || video.readyState !== video.HAVE_ENOUGH_DATA) {
-                animationFrameId = requestAnimationFrame(scanLoop);
-                return;
-            }
-            if (canvas.width !== video.videoWidth) {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-            }
+            if (!scannerRunning || !video || video.readyState !== video.HAVE_ENOUGH_DATA) { animationFrameId = requestAnimationFrame(scanLoop); return; }
+            if (canvas.width !== video.videoWidth) { canvas.width = video.videoWidth; canvas.height = video.videoHeight; }
             canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code) {
-                stopScanner();
-                handleQRRead(code.data);
-            } else {
-                animationFrameId = requestAnimationFrame(scanLoop);
-            }
+            if (code) { stopScanner(); handleQRRead(code.data); } else { animationFrameId = requestAnimationFrame(scanLoop); }
         }
         function stopScanner() {
             scannerRunning = false;
@@ -1208,75 +753,8 @@ INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
             canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageData = canvasCtx.getImageData(0, 0, canvas.width, canvas.height);
             const code = jsQR(imageData.data, imageData.width, imageData.height);
-            if (code) {
-                stopScanner();
-                handleQRRead(code.data);
-            } else {
-                window.showErrorModal("No se detectó QR en la imagen. Intente acercarse más.");
-            }
-        }
-        function handleImageForQR(imageFile) {
-            if (currentTariffs.length === 0) {
-                return window.showErrorModal("Primero debe cargar las tarifas.");
-            }
-            processImageForQR(imageFile);
-            document.getElementById('image-file-input').value = '';
-        }
-        function handleImageUpload(event) {
-            document.getElementById('qr-options-modal').classList.add('hidden');
-            const file = event.target.files[0];
-            if (!file) return;
-            handleImageForQR(file);
-        }
-        function processImageForQR(file) {
-            els.loadingStatus.textContent = "Procesando imagen...";
-            els.loadingStatus.classList.remove('hidden');
-            els.startScanBtn.disabled = true;
-            els.uploadMenuBtn.disabled = true;
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const img = new Image();
-                img.onload = () => {
-                    const tempCanvas = document.createElement('canvas');
-                    const tempCtx = tempCanvas.getContext('2d');
-                    let { width, height } = img;
-                    const max_dim = 1000;
-                    if (width > max_dim || height > max_dim) {
-                        const ratio = Math.min(max_dim / width, max_dim / height);
-                        width *= ratio;
-                        height *= ratio;
-                    }
-                    tempCanvas.width = width;
-                    tempCanvas.height = height;
-                    tempCtx.drawImage(img, 0, 0, width, height);
-                    try {
-                        const imageData = tempCtx.getImageData(0, 0, width, height);
-                        const code = jsQR(imageData.data, imageData.width, imageData.height);
-                        els.loadingStatus.classList.add('hidden');
-                        els.startScanBtn.disabled = false;
-                        els.uploadMenuBtn.disabled = false;
-                        if (code) {
-                            handleQRRead(code.data);
-                        } else {
-                            window.showErrorModal("No se pudo detectar el código QR en la imagen. Asegúrese de que el código esté claro y sin reflejos.");
-                        }
-                    } catch (error) {
-                        els.loadingStatus.classList.add('hidden');
-                        els.startScanBtn.disabled = false;
-                        els.uploadMenuBtn.disabled = false;
-                        console.error("Error al procesar la imagen para QR:", error);
-                        window.showErrorModal("Error interno al escanear la imagen.");
-                    }
-                };
-                img.onerror = () => {
-                    els.loadingStatus.classList.add('hidden');
-                    els.startScanBtn.disabled = false;
-                    els.uploadMenuBtn.disabled = false;
-                    window.showErrorModal("Error al cargar la imagen. ¿Es un formato válido?");
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
+            if (code) { stopScanner(); handleQRRead(code.data); } 
+            else { window.showErrorModal("No se detectó ningún QR."); }
         }
         function setupPasteCatcher() {
             document.addEventListener('paste', (e) => {
@@ -1288,7 +766,7 @@ INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
                         if (blob) {
                             document.getElementById('qr-options-modal').classList.add('hidden');
                             e.preventDefault();
-                            handleImageForQR(blob);
+                            processImageForQR(blob);
                             break;
                         }
                     }
@@ -1296,13 +774,45 @@ INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
             });
             document.getElementById('modal-paste-image-btn').addEventListener('click', () => {
                 document.getElementById('paste-catcher').focus();
-                window.showMessageModal("Presione CTRL+V (o Comando+V) para pegar la imagen en esta ventana.");
-                setTimeout(window.hideErrorModal, 5000); 
+                window.showMessageModal("Presione CTRL+V para pegar la imagen.");
+                setTimeout(window.hideErrorModal, 3000); 
             });
         }
-        // Función de inicialización
+        function processImageForQR(file) {
+            els.loadingStatus.textContent = "Procesando imagen...";
+            els.loadingStatus.classList.remove('hidden');
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const tempCanvas = document.createElement('canvas');
+                    const tempCtx = tempCanvas.getContext('2d');
+                    let { width, height } = img;
+                    // Resize for performance
+                    const max_dim = 1500;
+                    if (width > max_dim || height > max_dim) {
+                        const ratio = Math.min(max_dim / width, max_dim / height);
+                        width *= ratio; height *= ratio;
+                    }
+                    tempCanvas.width = width; tempCanvas.height = height;
+                    tempCtx.drawImage(img, 0, 0, width, height);
+                    try {
+                        const imageData = tempCtx.getImageData(0, 0, width, height);
+                        const code = jsQR(imageData.data, imageData.width, imageData.height);
+                        els.loadingStatus.classList.add('hidden');
+                        if (code) handleQRRead(code.data);
+                        else window.showErrorModal("No se encontró QR en la imagen.");
+                    } catch (error) {
+                        console.error(error); els.loadingStatus.classList.add('hidden');
+                        window.showErrorModal("Error procesando la imagen.");
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
 
-        // INICIALIZACIÓN
+        // --- FUNCIÓN DE INICIALIZACIÓN (HACER GLOBAL) ---
         function initApp() {
             // 1. Intentar cargar la última versión de Google Sheets
             fetchTariffsFromSheet();
@@ -1326,13 +836,33 @@ INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
             // Listeners para el menú de opciones QR manual
             els.uploadMenuBtn.addEventListener('click', () => els.qrOptionsModal.classList.remove('hidden'));
             document.getElementById('modal-upload-file-btn').addEventListener('click', () => document.getElementById('image-file-input').click()); 
-            document.getElementById('image-file-input').addEventListener('change', handleImageUpload);
+            document.getElementById('image-file-input').addEventListener('change', (e) => {
+                document.getElementById('qr-options-modal').classList.add('hidden');
+                if (e.target.files[0]) processImageForQR(e.target.files[0]);
+            });
             
             // Configurar el "pegado" de imagen
             setupPasteCatcher();
             
             console.log("App iniciada. Cargando tarifas automáticamente...");
         }
+
+        // Listeners (Fuera de la función Init para evitar errores de referencia)
+        els.startScanBtn.addEventListener('click', startScanner);
+        els.stopScanBtn.addEventListener('click', stopScanner);
+        els.capturePhotoBtn.addEventListener('click', capturePhoto);
+        els.sendOfferBtn.addEventListener('click', () => {
+            if (lastComparisonResult) els.sendOfferModal.classList.remove('hidden');
+            else window.showErrorModal("Realice un análisis primero.");
+        });
+        els.executeSendOfferBtn.addEventListener('click', handleCopyOffer);
+        els.uploadMenuBtn.addEventListener('click', () => els.qrOptionsModal.classList.remove('hidden'));
+        document.getElementById('modal-upload-file-btn').addEventListener('click', () => document.getElementById('image-file-input').click()); 
+        document.getElementById('image-file-input').addEventListener('change', (e) => {
+            document.getElementById('qr-options-modal').classList.add('hidden');
+            if (e.target.files[0]) processImageForQR(e.target.files[0]);
+        });
+
 
         window.onload = initApp;
 
