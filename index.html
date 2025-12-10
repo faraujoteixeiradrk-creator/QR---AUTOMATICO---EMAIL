@@ -733,7 +733,7 @@
             `;
         }
 
-        // --- LÓGICA DE ENVÍO DE EMAIL (AJUSTADA A HTML CONCISO) ---
+        // --- LÓGICA DE ENVÍO DE EMAIL (AJUSTADA A TEXTO PLANO CONCISO) ---
 
         function getFormattedPrice(price) {
             // Formatea el precio a 8 decimales, usando coma decimal y quitando miles.
@@ -752,13 +752,6 @@
             const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
             const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
             
-            // Colores corporativos en HEX para HTML incrustado en mailto:
-            const DRK_DARK_BLUE = '#0c4a6e'; // DRK-900
-            const DRK_BLUE = '#075985';     // DRK-800
-            const DRK_LIGHT_BLUE = '#e0f2fe'; // DRK-100
-            const CTA_RED_COLOR = '#CC0000';  // CTA-RED-500
-            const GREEN_SAVE = '#10b981';    // Verde para ahorro
-
             // --- 1. Generar Enlace de Formalización (Mantenido en texto plano)
             // Este es el enlace que va DENTRO del cuerpo del email principal
             const formalizationBody = 
@@ -774,42 +767,40 @@
             const formalizationLink = `mailto:contratacion@drkenergia.com?subject=${encodeURIComponent(`ATT DRK - QUIERO OFERTA - ${bd.cups}`)}&body=${encodeURIComponent(formalizationBody)}`;
 
 
-            // --- 2. Construir el cuerpo del Email en HTML CONCISO (Extremadamente reducido)
+            // --- 2. Construir el cuerpo del Email en TEXTO PLANO (Máxima compatibilidad y resumen)
             
-            const tableStyle = `border-collapse: collapse; width: 100%; max-width: 450px; margin: 15px auto; font-family: Arial, sans-serif;`;
-            const headerStyle = `background-color: ${DRK_DARK_BLUE}; color: white; padding: 8px; font-weight: bold; font-size: 15px; text-align: center;`;
-            const rowStyle = `padding: 6px; border-bottom: 1px solid #ddd; font-size: 12px;`;
-            const highlightStyle = `background-color: ${DRK_LIGHT_BLUE}; color: ${DRK_BLUE}; font-weight: bold;`;
-            const buttonStyle = `display: inline-block; padding: 10px 15px; margin: 10px auto; background-color: ${CTA_RED_COLOR}; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; border: none; text-align: center; font-size: 14px;`;
+            let plainTextContent = `
+A la atención del Cliente,
 
-            // Reducimos aún más el HTML, eliminando <div>, <h3> y usando tablas minimalistas.
-            let htmlContent = `
-                <table border="0" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; color: #333; line-height: 1.3; width: 100%;">
-                <tr><td style="font-size: 14px; color: ${DRK_DARK_BLUE}; font-weight: bold; padding: 5px 0 10px 0;">RESUMEN OFERTA DRK ENERGÍA</td></tr>
-                <tr><td>
-                    <table border="0" cellpadding="0" cellspacing="0" style="${tableStyle} border: 1px solid ${DRK_BLUE};">
-                        <tr><td colspan="2" style="${headerStyle}">DRK ENERGÍA - ${offer.name}</td></tr>
-                        
-                        <tr><td style="${rowStyle} width: 50%;">CUPS:</td><td style="${rowStyle} font-weight: bold;">${bd.cups}</td></tr>
-                        
-                        <tr><td style="${rowStyle} ${highlightStyle}">Ahorro Anual Estimado:</td><td style="${rowStyle} ${highlightStyle} color: ${bd.savings >= 0 ? GREEN_SAVE : CTA_RED_COLOR}; font-size: 14px;">${eur(bd.savings)}</td></tr>
-                        
-                        <tr><td style="${rowStyle}">Total Mensual Estimado:</td><td style="${rowStyle} font-weight: bold; font-size: 14px;">${eur(bd.totalAnnual / 12)}</td></tr>
+Adjunto el resumen de la oferta de DRK Energía generada por nuestro colaborador (${commercialCode}).
 
-                        <tr><td style="padding: 5px; text-align: center;" colspan="2">
-                             <a href="${formalizationLink}" style="${buttonStyle}">SÍ, QUIERO LA OFERTA</a>
-                        </td></tr>
-                    </table>
-                </td></tr>
-                <tr><td style="font-size: 10px; color: #888; padding-top: 10px;">[Cód. Colaborador: ${commercialCode}] *Este email es una simulación.</td></tr>
-                </table>
-            `;
+=============================================
+OFERTA DE AHORRO DRK ENERGÍA
+=============================================
+Tarifa: ${offer.name}
+CUPS: ${bd.cups}
+---------------------------------------------
+Ahorro Anual Estimado: ${eur(bd.savings)}
+Coste Mensual Estimado: ${eur(bd.totalAnnual / 12)}
+---------------------------------------------
+
+FORMALIZACIÓN RÁPIDA (Si desea aceptar la oferta):
+Para contratar, simplemente haga clic en el siguiente enlace de aceptación. Se abrirá un email a nuestro equipo de Contratación:
+
+-> ENLACE DE ACEPTACIÓN: ${formalizationLink}
+
+DOCUMENTACIÓN REQUERIDA PARA CONTRATAR:
+Para formalizar el contrato, responda al email que se genera con el enlace adjuntando DNI, última factura y número de cuenta (IBAN).
+
+Atentamente,
+Equipo Comercial DRK Energía
+`;
             
             // --- Cierre y codificación del Mailto ---
             const subject = encodeURIComponent(`Oferta DRK: Ahorro ${eur(bd.savings)} - CUPS ${bd.cups}`);
             
-            // Codificamos el contenido HTML
-            const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${encodeURIComponent(htmlContent)}`;
+            // Usamos el contenido de Texto Plano y lo codificamos
+            const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${encodeURIComponent(plainTextContent)}`;
 
             return mailtoUrl;
         }
@@ -845,7 +836,7 @@
             } catch (e) {
                 console.error("Error al generar el mailto:", e);
                 // Si falla, el error es probablemente el límite de la URL
-                window.showErrorModal(`Error al generar el email: ${e.message}. El navegador o el cliente de correo están bloqueando o no soportan el enlace. Esto suele ocurrir si el email es demasiado largo.`);
+                window.showErrorModal(`Error al generar el email: ${e.message}. Esto suele ocurrir si el enlace es demasiado largo (límite de 2048 caracteres).`);
             }
         }
 
