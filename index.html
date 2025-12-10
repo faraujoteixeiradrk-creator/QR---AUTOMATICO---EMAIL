@@ -483,8 +483,7 @@
                         // Limpieza y parseo numérico (asume formato europeo con coma o punto)
                         const numValue = parseFloat(value.replace(',', '.')); 
                         if (!isNaN(numValue)) {
-                            // FIX DEL BUG: Asumimos que el usuario introduce el precio ANUAL de potencia y quitamos la auto-conversión.
-                            // Esto evita que precios bajos se multipliquen por 365.
+                            // Asumimos que el usuario introduce el precio ANUAL de potencia
                             tariff[header] = numValue; 
                         } else {
                              // Si no es un número válido, descartar la tarifa
@@ -619,7 +618,7 @@
             // ESTE BUCLE ASEGURA QUE SE ESTUDIAN TODAS LAS TARIFAS Y SE ELIGE LA MÁS BARATA
             currentTariffs.forEach(t => {
                 // El precio anual (t.p_potencia_1 y t.p_potencia_2) ya está cargado del CSV.
-                // CORRECCIÓN: La división por 365 es esencial para obtener el coste diario, que se multiplica por los días facturados.
+                // La división por 365 es esencial para obtener el coste diario, que se multiplica por los días facturados.
                 const priceP1Day = t.p_potencia_1 / ANNUAL_DAYS;
                 const priceP2Day = t.p_potencia_2 / ANNUAL_DAYS;
                 
@@ -863,6 +862,58 @@
 
         // --- LÓGICA DE COPIA DE OFERTA (REEMPLAZA ENVÍO DIRECTO) ---
 
+        // Función que genera el TEXTO PLANO FORMATEADO para el portapapeles (FALLBACK)
+        function generatePlainTextOffer(commercialCode) {
+             if (!lastComparisonResult) return "";
+            const bd = lastComparisonResult;
+            const offer = bd.offer;
+            const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
+            const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+            const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
+            
+            // Obtener valores de pre-relleno del modal
+            const clientName = els.clientNameInput.value.trim() || '__________';
+            const clientPhone = els.clientPhoneInput.value.trim() || '__________';
+            const clientEmail = els.clientEmailInput.value.trim() || '__________';
+
+            // Generar el cuerpo de texto plano con toda la información clave
+            return `
+===========================================
+⭐ RESUMEN DE OFERTA DRK ENERGÍA ⭐
+===========================================
+
+TARIFA SELECCIONADA: ${offer.name} (${offer.description})
+
+CLIENTE:
+- Nombre: ${clientName}
+- Teléfono: ${clientPhone}
+- Email: ${clientEmail}
+- CUPS: ${bd.cups}
+
+RESULTADO DEL ESTUDIO:
+- Ahorro Anual Estimado: ${eur(bd.savings)}
+- Coste Mensual Estimado: ${eur(bd.totalAnnual / 12)}
+- Coste Anual Proyectado: ${eur(bd.totalAnnual)}
+- Factura Actual Anual: ${eur(bd.originalBillAnnual)}
+
+DETALLES DE PRECIOS DE LA OFERTA (€):
+- P1 (Potencia - €/kW/día): ${numPrice(bd.priceP1Day)}
+- P2 (Potencia - €/kW/día): ${numPrice(bd.priceP2Day)}
+- E1 (Punta - €/kWh): ${numPrice(offer.p1_price)}
+- E2 (Llano - €/kWh): ${numPrice(offer.p2_price)}
+- E3 (Valle - €/kWh): ${numPrice(offer.p3_price)}
+
+===========================================
+CÓDIGO COMERCIAL: ${commercialCode}
+===========================================
+
+INSTRUCCIONES DE FORMALIZACIÓN (Si el formato no se pega bien):
+1. Copie el texto de la oferta HTML (el maquetado).
+2. Péguelo en una aplicación de notas (como Google Keep o Apple Notes).
+3. Vuelva a copiar el texto desde la aplicación de notas y péguelo en el email. Esto suele forzar la inclusión del formato HTML completo en el portapapeles del móvil.
+`;
+        }
+
         // Función que genera el HTML maquetado listo para pegar en el cliente de correo
         function generateStyledHtmlOffer(commercialCode) {
             if (!lastComparisonResult) {
@@ -894,8 +945,7 @@
 
             // --- 1. Generar Enlace de Formalización (El que va en el botón "QUIERO LA OFERTA")
             
-            // Sección de Precios DRK (Nueva Información Adicional para la empresa)
-            // *** MAQUETACIÓN DE LA INFORMACIÓN INTERNA (Texto Plano para mailto) ***
+            // Sección de Precios DRK (Nueva Información Adicional para la empresa) - Solo para el cuerpo del correo
             const pricingDetails = 
                 `--- DATOS DE LA OFERTA ---\n\n` +
                 `Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name} (2.0TD)\n` +
@@ -910,7 +960,6 @@
                 `E2 (Energía - €/kWh): ${numPrice(offer.p2_price)}\n` +
                 `E3 (Energía - €/kWh): ${numPrice(offer.p3_price)}\n` +
                 `------------------------------\n`;
-            // *************************************************************
 
             // Usamos saltos de línea codificados (%0D%0A) y el pre-relleno
             const formalizationBody = 
@@ -998,6 +1047,7 @@
             return htmlContent;
         }
 
+
         // Función que gestiona la copia al portapapeles
         async function handleCopyOffer() {
             const commercialCode = els.comercialCodeInput.value.trim();
@@ -1020,6 +1070,7 @@
                 tempElement.style.left = '-9999px';
                 // Añadimos un atributo de contenido editable para mejorar la compatibilidad en algunos entornos
                 tempElement.setAttribute('contenteditable', 'true');
+                tempElement.innerHTML = htmlContent;
                 document.body.appendChild(tempElement);
                 
                 // 2. Seleccionar el contenido (se requiere focus para document.execCommand)
@@ -1029,13 +1080,12 @@
                 selection.removeAllRanges();
                 selection.addRange(range);
                 
-                // 3. Ejecutar comando de copia (Funciona para HTML en la mayoría de clientes de correo)
+                // 3. Ejecutar comando de copia (Funciona para HTML en la mayoría de clientes de correo en PC/Mac)
                 let success = false;
                 try {
-                    // Usamos el execCommand tradicional que sigue siendo el más fiable para copia HTML
                     success = document.execCommand('copy');
                 } catch (err) {
-                    console.error('Copy command failed:', err);
+                    console.error('Copy command failed (execCommand):', err);
                 }
                 
                 // 4. Limpiar
@@ -1043,11 +1093,13 @@
                 document.body.removeChild(tempElement);
 
                 if (success) {
-                    window.showMessageModal(`✅ ¡Copiado! Ahora **pegue (Ctrl+V o Cmd+V)** el contenido en el cuerpo de su email. Código: ${commercialCode}`);
+                    window.showMessageModal(`✅ ¡Copiado! Ahora **pegue (Ctrl+V o Cmd+V)** el contenido MAQUETADO en el cuerpo de su email. Código: ${commercialCode}`);
                 } else {
-                     // Si falla, volvemos a la copia de texto plano con advertencia
-                     await navigator.clipboard.writeText(htmlContent);
-                     window.showErrorModal(`⚠️ Aviso: La copia automática de HTML falló. Se copió el texto sin formato. Por favor, **pegue y luego copie manualmente el texto maquetado** que aparece en el email para reenviarlo. (Esto es habitual en navegadores antiguos o clientes de correo nativos como Apple Mail).`);
+                    // PLAN B (Para móviles): Intentar copia moderna y mostrar instrucción manual
+                    const plainTextContent = generatePlainTextOffer(commercialCode);
+                    await navigator.clipboard.writeText(plainTextContent);
+                    
+                     window.showErrorModal(`⚠️ Aviso: La copia automática de formato falló en este dispositivo (móvil). Se copió el texto en formato simple. Por favor, **mantenga pulsado y seleccione 'Pegar'** en el cuerpo del correo, o si el formato maquetado no aparece, pegue el texto en Notas y cópielo de nuevo para forzar el formato HTML en iOS/Android.`);
                 }
                 
                 // Oculta el modal
@@ -1055,7 +1107,7 @@
                 
             } catch (e) {
                 console.error("Error al copiar al portapapeles:", e);
-                window.showErrorModal(`Error al copiar: Su navegador bloqueó el acceso al portapapeles. Intente copiar manualmente el código si es necesario. (Error: ${e.message})`);
+                window.showErrorModal(`Error de Portapapeles: No se pudo copiar el texto. Su navegador necesita permiso o la API de copia falló. (Error: ${e.message})`);
             }
         }
 
