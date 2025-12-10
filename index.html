@@ -493,8 +493,27 @@
             const BG_LIGHT = '#f0f9ff';
 
             const clientName = els.clientNameInput.value.trim() || '__________';
-            const formalizationLink = `mailto:f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es?subject=${encodeURIComponent(`ACEPTACIÓN OFERTA ${bd.cups}`)}&body=${encodeURIComponent(`Hola, acepto la oferta para el CUPS ${bd.cups}. Nombre: ${clientName}`)}`;
+            const clientPhone = els.clientPhoneInput.value.trim() || '[ESCRIBA AQUÍ SU NÚMERO DE TELÉFONO]';
+            const clientEmail = els.clientEmailInput.value.trim() || '[ESTE ES EL EMAIL DEL CLIENTE]';
 
+            // --- DETALLE DE LA OFERTA PARA EL CUERPO DEL EMAIL (Plain Text) ---
+            const LB = '\r\n'; // CR+LF para mejor compatibilidad en mailto:
+            
+            const monthlyEstimate = eur(bd.totalAnnual / 12);
+            const totalConsumption = num(bd.consumo_total, 0) + ' kWh';
+            
+            // Formatear precios en €/kW/día (como en la oferta)
+            const p1PricePerDay = numPriceFormula(bd.priceP1Day);
+            const p2PricePerDay = numPriceFormula(bd.priceP2Day);
+            const e1Price = numPriceFormula(offer.p1_price);
+            const e2Price = numPriceFormula(offer.p2_price);
+            const e3Price = numPriceFormula(offer.p3_price);
+
+
+            const emailBody = `Hola equipo de Contratación DRK,${LB}${LB}Confirmo que deseo aceptar la oferta de ahorro con CUPS: ${bd.cups}.${LB}${LB}--- DATOS DE LA OFERTA ---${LB}${LB}Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name}${LB}Zona Geográfica: PENINSULA${LB}Ahorro Anual Estimado: ${eur(bd.savings)}${LB}Total Mensual Estimado: ${monthlyEstimate}${LB}Consumo Total Facturado: ${totalConsumption}${LB}${LB}--- DETALLE DE PRECIOS (€) ---${LB}P1 (Potencia - €/kW/día): ${p1PricePerDay}${LB}P2 (Potencia - €/kW/día): ${p2PricePerDay}${LB}E1 (Energía - €/kWh): ${e1Price}${LB}E2 (Energía - €/kWh): ${e2Price}${LB}E3 (Energía - €/kWh): ${e3Price}${LB}------------------------------${LB}${LB}Por favor, utilicen los siguientes datos para tramitar mi cambio:${LB}--------------------------------------------------------${LB}DATOS DEL CLIENTE (A RELLENAR):${LB}--------------------------------------------------------${LB}Nombre completo: ${clientName}${LB}Teléfono de contacto: ${clientPhone}${LB}Email de contacto: ${clientEmail}${LB}${LB}--------------------------------------------------------${LB}INFORMACIÓN ADICIONAL (Opcional):${LB}--------------------------------------------------------${LB}[AGREGUE CUALQUIER COMENTARIO EXTRA AQUÍ]${LB}${LB}${LB}*--- DOCUMENTACIÓN REQUERIDA ---*${LB}*Para formalizar el contrato, por favor, responde a este email adjuntando:*${LB}*1. Foto del DNI/CIF (anverso y reverso).*${LB}*2. Última factura (mínimo 3 meses de antigüedad).*${LB}*3. Email de contacto para validación.*${LB}*4. Teléfono de contacto.*${LB}*5. Número de cuenta bancaria (IBAN).*${LB}${LB}*Adjunto la documentación requerida.*`;
+
+            const formalizationLink = `mailto:f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es?subject=${encodeURIComponent(`ACEPTACIÓN OFERTA ${bd.cups} - ${clientName}`)}&body=${encodeURIComponent(emailBody)}`;
+            
             // Estilos CSS Inline para máxima compatibilidad
             const tableMain = `width: 600px; max-width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; border: 1px solid #ddd; margin: 0 auto; background: white;`;
             const headerCell = `background-color: ${BLUE_DARK}; color: white; padding: 15px; text-align: center;`;
