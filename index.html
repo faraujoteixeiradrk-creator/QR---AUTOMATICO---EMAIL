@@ -837,8 +837,12 @@
             els.uploadMenuBtn.addEventListener('click', () => els.qrOptionsModal.classList.remove('hidden'));
             document.getElementById('modal-upload-file-btn').addEventListener('click', () => document.getElementById('image-file-input').click()); 
             document.getElementById('image-file-input').addEventListener('change', (e) => {
+                // ADDED LOGGING FOR DEBUGGING MOBILE ISSUES
+                console.log("File selected:", e.target.files.length > 0 ? e.target.files[0].name : "No file.");
+                
                 document.getElementById('qr-options-modal').classList.add('hidden');
                 if (e.target.files[0]) processImageForQR(e.target.files[0]);
+                else console.error("File input change event triggered, but no file found."); // Added fallback error
             });
             
             // Configurar el "pegado" de imagen
@@ -846,23 +850,6 @@
             
             console.log("App iniciada. Cargando tarifas automáticamente...");
         }
-
-        // Listeners (Fuera de la función Init para evitar errores de referencia)
-        els.startScanBtn.addEventListener('click', startScanner);
-        els.stopScanBtn.addEventListener('click', stopScanner);
-        els.capturePhotoBtn.addEventListener('click', capturePhoto);
-        els.sendOfferBtn.addEventListener('click', () => {
-            if (lastComparisonResult) els.sendOfferModal.classList.remove('hidden');
-            else window.showErrorModal("Realice un análisis primero.");
-        });
-        els.executeSendOfferBtn.addEventListener('click', handleCopyOffer);
-        els.uploadMenuBtn.addEventListener('click', () => els.qrOptionsModal.classList.remove('hidden'));
-        document.getElementById('modal-upload-file-btn').addEventListener('click', () => document.getElementById('image-file-input').click()); 
-        document.getElementById('image-file-input').addEventListener('change', (e) => {
-            document.getElementById('qr-options-modal').classList.add('hidden');
-            if (e.target.files[0]) processImageForQR(e.target.files[0]);
-        });
-
 
         window.onload = initApp;
 
