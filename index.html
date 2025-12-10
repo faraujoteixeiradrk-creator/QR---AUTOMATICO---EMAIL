@@ -728,7 +728,7 @@
             `;
         }
 
-        // --- LÓGICA DE ENVÍO DE EMAIL (AJUSTADA A TEXTO PLANO) ---
+        // --- LÓGICA DE ENVÍO DE EMAIL (AJUSTADA A HTML CONCISO) ---
 
         function getFormattedPrice(price) {
             // Formatea el precio a 8 decimales, usando coma decimal y quitando miles.
@@ -747,8 +747,15 @@
             const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
             const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
             
-            // --- 1. Generar Enlace de Formalización (Mantenido)
-            // Este es el enlace que va dentro del cuerpo del email principal
+            // Colores corporativos en HEX para HTML incrustado en mailto:
+            const DRK_DARK_BLUE = '#0c4a6e'; // DRK-900
+            const DRK_BLUE = '#075985';     // DRK-800
+            const DRK_LIGHT_BLUE = '#e0f2fe'; // DRK-100
+            const CTA_RED_COLOR = '#CC0000';  // CTA-RED-500
+            const GREEN_SAVE = '#10b981';    // Verde para ahorro
+
+            // --- 1. Generar Enlace de Formalización (Mantenido en texto plano)
+            // Este es el enlace que va DENTRO del cuerpo del email principal
             const formalizationBody = 
                 `Estimados DRK Energía,\n\n` +
                 `Confirmo mi interés en la oferta con CUPS: ${bd.cups}.%0D%0A%0D%0A` +
@@ -761,58 +768,46 @@
                 
             const formalizationLink = `mailto:contratacion@drkenergia.com?subject=${encodeURIComponent(`ATT DRK - QUIERO OFERTA - ${bd.cups}`)}&body=${encodeURIComponent(formalizationBody)}`;
 
-            // --- 2. Construir el cuerpo del Email en TEXTO PLANO (Máxima compatibilidad)
+
+            // --- 2. Construir el cuerpo del Email en HTML CONCISO (Máxima compatibilidad de longitud)
             
-            // Hemos simplificado la plantilla para reducir la longitud del URL del mailto
-            let plainTextContent = `
-A la ATT DE DRK.
-Estimado cliente:
+            const tableStyle = `border-collapse: collapse; width: 100%; max-width: 450px; margin: 15px auto; border: 1px solid ${DRK_BLUE}; font-family: Arial, sans-serif;`;
+            const headerStyle = `background-color: ${DRK_DARK_BLUE}; color: white; padding: 10px; font-weight: bold; font-size: 16px; text-align: center;`;
+            const rowStyle = `padding: 8px; border-bottom: 1px solid #ddd; font-size: 13px;`;
+            const highlightStyle = `background-color: ${DRK_LIGHT_BLUE}; color: ${DRK_BLUE}; font-weight: bold;`;
+            const buttonStyle = `display: inline-block; padding: 10px 20px; margin: 15px auto; background-color: ${CTA_RED_COLOR}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; border: none; text-align: center;`;
 
-Le enviamos la oferta generada por nuestro colaborador (${commercialCode})
+            let htmlContent = `
+                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; padding: 10px;">
+                    <h3 style="color: ${DRK_DARK_BLUE}; margin-bottom: 15px; border-bottom: 2px solid ${DRK_BLUE}; padding-bottom: 5px;">
+                        RESUMEN OFERTA DRK ENERGÍA
+                    </h3>
+                    
+                    <table border="0" cellpadding="0" cellspacing="0" style="${tableStyle}">
+                        <tr><td colspan="2" style="${headerStyle}">DRK ENERGÍA - ${offer.name}</td></tr>
+                        
+                        <tr><td style="${rowStyle} width: 50%;">CUPS:</td><td style="${rowStyle} font-weight: bold;">${bd.cups}</td></tr>
+                        
+                        <tr><td style="${rowStyle} ${highlightStyle}">&#128176; Ahorro Anual Estimado:</td><td style="${rowStyle} ${highlightStyle} color: ${bd.savings >= 0 ? GREEN_SAVE : CTA_RED_COLOR}; font-size: 15px;">${eur(bd.savings)}</td></tr>
+                        
+                        <tr><td style="${rowStyle}">Total Mensual Estimado:</td><td style="${rowStyle} font-weight: bold;">${eur(bd.totalAnnual / 12)}</td></tr>
 
-DATOS DE LA OFERTA
-------------------
-Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name}
-Zona Geográfica: PENÍNSULA
-Ahorro Anual Estimado: ${eur(bd.savings)}
-Total Mensual Estimado: ${eur(bd.totalAnnual / 12)}
-Consumo Total Facturado: ${num(bd.consumo_total, 0)} kWh
-
-DETALLE DE PRECIOS (€)
-----------------------
-P1 (Potencia - €/kW/día): ${getFormattedPrice(bd.offer.p_potencia_1 / ANNUAL_DAYS)}
-P2 (Potencia - €/kW/día): ${getFormattedPrice(bd.offer.p_potencia_2 / ANNUAL_DAYS)}
-E1 (Energía - €/kWh): ${getFormattedPrice(bd.offer.p1_price)}
-E2 (Energía - €/kWh): ${getFormattedPrice(bd.offer.p2_price)}
-E3 (Energía - €/kWh): ${getFormattedPrice(bd.offer.p3_price)}
-
-DATOS DEL CLIENTE
------------------
-CUPS: ${bd.cups}
-Cód. Comercial: ${commercialCode}
-
-FORMALIZAR CONTRATO (Botón "QUIERO OFERTA")
---------------------------------------------
-Si desea aceptar la oferta, haga clic en el siguiente enlace. Se abrirá un email de respuesta a nuestro equipo de contratación:
-
-FORMALIZAR OFERTA: ${formalizationLink}
-
-DOCUMENTACIÓN REQUERIDA
------------------------
-Para formalizar, responda a este email adjuntando:
-1. Foto del DNI/CIF (anverso y reverso).
-2. Última factura (mínimo 3 meses de antigüedad).
-3. Número de cuenta bancaria (IBAN).
-
-Atentamente,
-Equipo Comercial DRK Energía
-`;
+                        <tr><td style="padding: 8px; text-align: center;" colspan="2">
+                             <p style="margin: 15px 0 10px 0; font-weight: bold; color: ${DRK_DARK_BLUE};">FORMALIZACIÓN RÁPIDA (Haga clic para aceptar)</p>
+                             <a href="${formalizationLink}" style="${buttonStyle}">SÍ, QUIERO LA OFERTA</a>
+                        </td></tr>
+                    </table>
+                    
+                    <p style="font-size: 0.8em; color: #555;">[Cód. Colaborador: ${commercialCode}]</p>
+                    <p style="font-size: 0.7em; color: #888; margin-top: 15px;">*Este email es una simulación. El desglose completo de precios y más detalles están disponibles en la plataforma del comercial.</p>
+                </div>
+            `;
             
-            // El concepto de email debe ser: ATT Nombre del ciente - CUPS Aceptado Oferta DRK.
-            const subject = encodeURIComponent(`ATT [Nombre Cliente] - CUPS ${bd.cups} Oferta DRK`);
+            // --- Cierre y codificación del Mailto ---
+            const subject = encodeURIComponent(`Oferta DRK: Ahorro ${eur(bd.savings)} - CUPS ${bd.cups}`);
             
-            // Usamos el contenido de Texto Plano y lo codificamos
-            const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${encodeURIComponent(plainTextContent)}`;
+            // Codificamos el contenido HTML
+            const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${encodeURIComponent(htmlContent)}`;
 
             return mailtoUrl;
         }
