@@ -184,7 +184,13 @@
                 <input type="text" id="client-name-input" placeholder="Nombre Cliente (Opcional)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
                 <input type="tel" id="client-phone-input" placeholder="Teléfono Cliente (Opcional)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
                 <input type="email" id="client-email-input" placeholder="Email Cliente (Opcional)" class="w-full mb-4 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
-                <button id="execute-send-offer-btn" class="w-full bg-cta-red-500 hover:bg-cta-red-600 text-white font-bold py-3 rounded-xl shadow-md mb-3">COPIAR AL PORTAPAPELES</button>
+                
+                <!-- Botón optimizado para móvil (lanza mailto directamente) -->
+                <button id="send-mailto-btn" class="w-full bg-drk-600 hover:bg-drk-800 text-white font-bold py-3 rounded-xl shadow-md mb-3">ENVIAR SOLICITUD POR EMAIL</button>
+                
+                <!-- Botón de Copiar HTML (función original) -->
+                <button id="copy-offer-btn" class="w-full bg-cta-red-500 hover:bg-cta-red-600 text-white font-bold py-3 rounded-xl shadow-md mb-3">COPIAR COMPARATIVO (HTML)</button>
+                
                 <button onclick="document.getElementById('send-offer-modal').classList.add('hidden');" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold py-3 rounded-xl text-sm">Cancelar</button>
             </div>
         </div>
@@ -226,7 +232,9 @@
             clientNameInput: document.getElementById('client-name-input'),
             clientPhoneInput: document.getElementById('client-phone-input'),
             clientEmailInput: document.getElementById('client-email-input'),
-            executeSendOfferBtn: document.getElementById('execute-send-offer-btn'),
+            // Renombrar execute-send-offer-btn a copy-offer-btn para mayor claridad
+            copyOfferBtn: document.getElementById('copy-offer-btn'),
+            sendMailtoBtn: document.getElementById('send-mailto-btn'),
             tariffDisplayBadge: document.getElementById('tariff-display-badge'),
             uploadMenuBtn: document.getElementById('upload-menu-btn'),
             imageFileInput: document.getElementById('image-file-input'),
@@ -475,6 +483,49 @@
             `;
         }
 
+        // --- FUNCIÓN PARA ABRIR EL CORREO DIRECTAMENTE (Optimizado para iOS) ---
+        function handleSendMailto() {
+            if (!lastComparisonResult) return window.showErrorModal("Primero realice una comparación.");
+            
+            const commercialCode = els.comercialCodeInput.value.trim();
+            if (!commercialCode) return window.showErrorModal("Indique el Código Comercial.");
+
+            try {
+                const bd = lastComparisonResult;
+                const offer = bd.offer;
+                const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
+                const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+                const numPriceFormula = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 6, maximumFractionDigits: 6 }).format(n);
+                
+                const clientName = els.clientNameInput.value.trim() || '[ESCRIBA AQUÍ SU NOMBRE COMPLETO]';
+                const clientPhone = els.clientPhoneInput.value.trim() || '[ESCRIBA AQUÍ SU NÚMERO DE TELÉFONO]';
+                const clientEmail = els.clientEmailInput.value.trim() || '[ESTE ES EL EMAIL DEL CLIENTE]';
+
+                const LB = '\r\n'; // CR+LF para mejor compatibilidad en mailto:
+                
+                const monthlyEstimate = eur(bd.totalAnnual / 12);
+                const totalConsumption = num(bd.consumo_total, 0) + ' kWh';
+                const p1PricePerDay = numPriceFormula(bd.priceP1Day);
+                const p2PricePerDay = numPriceFormula(bd.priceP2Day);
+                const e1Price = numPriceFormula(offer.p1_price);
+                const e2Price = numPriceFormula(offer.p2_price);
+                const e3Price = numPriceFormula(offer.p3_price);
+
+
+                const emailBody = `Hola equipo de Contratación DRK,${LB}${LB}Confirmo que deseo aceptar la oferta de ahorro con CUPS: ${bd.cups}.${LB}${LB}--- DATOS DE LA OFERTA ---${LB}${LB}Comercializadora y Tarifa: DRK ENERGÍA - ${offer.name}${LB}Zona Geográfica: PENINSULA${LB}Ahorro Anual Estimado: ${eur(bd.savings)}${LB}Total Mensual Estimado: ${monthlyEstimate}${LB}Consumo Total Facturado: ${totalConsumption}${LB}${LB}--- DETALLE DE PRECIOS (€) ---${LB}P1 (Potencia - €/kW/día): ${p1PricePerDay}${LB}P2 (Potencia - €/kW/día): ${p2PricePerDay}${LB}E1 (Energía - €/kWh): ${e1Price}${LB}E2 (Energía - €/kWh): ${e2Price}${LB}E3 (Energía - €/kWh): ${e3Price}${LB}------------------------------${LB}${LB}Por favor, utilicen los siguientes datos para tramitar mi cambio:${LB}--------------------------------------------------------${LB}DATOS DEL CLIENTE (A RELLENAR):${LB}--------------------------------------------------------${LB}Nombre completo: ${clientName}${LB}Teléfono de contacto: ${clientPhone}${LB}Email de contacto: ${clientEmail}${LB}${LB}--------------------------------------------------------${LB}INFORMACIÓN ADICIONAL (Opcional):${LB}--------------------------------------------------------${LB}[AGREGUE CUALQUIER COMENTARIO EXTRA AQUÍ]${LB}${LB}${LB}*--- DOCUMENTACIÓN REQUERIDA ---*${LB}*Para formalizar el contrato, por favor, responde a este email adjuntando:*${LB}*1. Foto del DNI/CIF (anverso y reverso).*${LB}*2. Última factura (mínimo 3 meses de antigüedad).*${LB}*3. Email de contacto para validación.*${LB}*4. Teléfono de contacto.*${LB}*5. Número de cuenta bancaria (IBAN).*${LB}${LB}*Adjunto la documentación requerida.*`;
+                
+                const formalizationLink = `mailto:f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es?subject=${encodeURIComponent(`ACEPTACIÓN OFERTA ${bd.cups} - ${clientName}`)}&body=${encodeURIComponent(emailBody)}`;
+                
+                // Abrir el enlace mailto directamente
+                window.location.href = formalizationLink;
+
+                els.sendOfferModal.classList.add('hidden');
+            } catch (e) {
+                console.error("Error al abrir mailto:", e);
+                window.showErrorModal(`Error al generar correo: ${e.message}`);
+            }
+        }
+        
         // GENERADOR DE HTML PARA COPIAR (Diseño PDF DETALLADO)
         function generateStyledHtmlOffer(commercialCode) {
             const bd = lastComparisonResult;
@@ -849,8 +900,11 @@
                     window.showErrorModal("Por favor, analice una factura primero para generar una oferta.");
                 }
             });
-            // Listener para ejecutar la COPIA
-            els.executeSendOfferBtn.addEventListener('click', handleCopyOffer);
+            // Listener para ejecutar la COPIA HTML
+            els.copyOfferBtn.addEventListener('click', handleCopyOffer);
+            // Listener para ENVIAR MAILTO directamente (Solución iOS)
+            els.sendMailtoBtn.addEventListener('click', handleSendMailto);
+
 
             // Listeners para el menú de opciones QR manual
             els.uploadMenuBtn.addEventListener('click', () => els.qrOptionsModal.classList.remove('hidden'));
