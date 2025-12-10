@@ -491,6 +491,10 @@
                 const response = await fetch(SHEET_URL);
 
                 if (!response.ok) {
+                    // Manejo específico del Error 400 (y otros errores de acceso)
+                    if (response.status === 400 || response.status === 401 || response.status === 403) {
+                         throw new Error(`Error de acceso (Código ${response.status}). Esto ocurre si la Hoja de Google Sheets NO está compartida como 'Pública' o el ID de la hoja es incorrecto.`);
+                    }
                     throw new Error(`Fallo en la conexión (${response.status} ${response.statusText}).`);
                 }
 
@@ -513,7 +517,8 @@
                 if (cachedTariffs.length > 0) {
                     console.warn(`ALERTA: Falló la carga desde Google Sheets. Usando ${cachedTariffs.length} tarifas de la caché local. (Error: ${err.message})`);
                 } else {
-                    window.showErrorModal(`Error crítico al cargar tarifas: ${err.message}. Asegúrese de que la hoja de Drive es pública.`);
+                    // Mostrar error crítico al usuario si no hay caché disponible
+                    window.showErrorModal(`Error crítico al cargar tarifas: ${err.message}. Por favor, revise la configuración de acceso a su hoja de Google Drive.`);
                 }
             } finally {
                 updateTariffCount();
@@ -769,38 +774,35 @@
             const formalizationLink = `mailto:contratacion@drkenergia.com?subject=${encodeURIComponent(`ATT DRK - QUIERO OFERTA - ${bd.cups}`)}&body=${encodeURIComponent(formalizationBody)}`;
 
 
-            // --- 2. Construir el cuerpo del Email en HTML CONCISO (Máxima compatibilidad de longitud)
+            // --- 2. Construir el cuerpo del Email en HTML CONCISO (Extremadamente reducido)
             
-            const tableStyle = `border-collapse: collapse; width: 100%; max-width: 450px; margin: 15px auto; border: 1px solid ${DRK_BLUE}; font-family: Arial, sans-serif;`;
-            const headerStyle = `background-color: ${DRK_DARK_BLUE}; color: white; padding: 10px; font-weight: bold; font-size: 16px; text-align: center;`;
-            const rowStyle = `padding: 8px; border-bottom: 1px solid #ddd; font-size: 13px;`;
+            const tableStyle = `border-collapse: collapse; width: 100%; max-width: 450px; margin: 15px auto; font-family: Arial, sans-serif;`;
+            const headerStyle = `background-color: ${DRK_DARK_BLUE}; color: white; padding: 8px; font-weight: bold; font-size: 15px; text-align: center;`;
+            const rowStyle = `padding: 6px; border-bottom: 1px solid #ddd; font-size: 12px;`;
             const highlightStyle = `background-color: ${DRK_LIGHT_BLUE}; color: ${DRK_BLUE}; font-weight: bold;`;
-            const buttonStyle = `display: inline-block; padding: 10px 20px; margin: 15px auto; background-color: ${CTA_RED_COLOR}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; border: none; text-align: center;`;
+            const buttonStyle = `display: inline-block; padding: 10px 15px; margin: 10px auto; background-color: ${CTA_RED_COLOR}; color: white; text-decoration: none; border-radius: 6px; font-weight: bold; border: none; text-align: center; font-size: 14px;`;
 
+            // Reducimos aún más el HTML, eliminando <div>, <h3> y usando tablas minimalistas.
             let htmlContent = `
-                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; padding: 10px;">
-                    <h3 style="color: ${DRK_DARK_BLUE}; margin-bottom: 15px; border-bottom: 2px solid ${DRK_BLUE}; padding-bottom: 5px;">
-                        RESUMEN OFERTA DRK ENERGÍA
-                    </h3>
-                    
-                    <table border="0" cellpadding="0" cellspacing="0" style="${tableStyle}">
+                <table border="0" cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; color: #333; line-height: 1.3; width: 100%;">
+                <tr><td style="font-size: 14px; color: ${DRK_DARK_BLUE}; font-weight: bold; padding: 5px 0 10px 0;">RESUMEN OFERTA DRK ENERGÍA</td></tr>
+                <tr><td>
+                    <table border="0" cellpadding="0" cellspacing="0" style="${tableStyle} border: 1px solid ${DRK_BLUE};">
                         <tr><td colspan="2" style="${headerStyle}">DRK ENERGÍA - ${offer.name}</td></tr>
                         
                         <tr><td style="${rowStyle} width: 50%;">CUPS:</td><td style="${rowStyle} font-weight: bold;">${bd.cups}</td></tr>
                         
-                        <tr><td style="${rowStyle} ${highlightStyle}">&#128176; Ahorro Anual Estimado:</td><td style="${rowStyle} ${highlightStyle} color: ${bd.savings >= 0 ? GREEN_SAVE : CTA_RED_COLOR}; font-size: 15px;">${eur(bd.savings)}</td></tr>
+                        <tr><td style="${rowStyle} ${highlightStyle}">Ahorro Anual Estimado:</td><td style="${rowStyle} ${highlightStyle} color: ${bd.savings >= 0 ? GREEN_SAVE : CTA_RED_COLOR}; font-size: 14px;">${eur(bd.savings)}</td></tr>
                         
-                        <tr><td style="${rowStyle}">Total Mensual Estimado:</td><td style="${rowStyle} font-weight: bold;">${eur(bd.totalAnnual / 12)}</td></tr>
+                        <tr><td style="${rowStyle}">Total Mensual Estimado:</td><td style="${rowStyle} font-weight: bold; font-size: 14px;">${eur(bd.totalAnnual / 12)}</td></tr>
 
-                        <tr><td style="padding: 8px; text-align: center;" colspan="2">
-                             <p style="margin: 15px 0 10px 0; font-weight: bold; color: ${DRK_DARK_BLUE};">FORMALIZACIÓN RÁPIDA (Haga clic para aceptar)</p>
+                        <tr><td style="padding: 5px; text-align: center;" colspan="2">
                              <a href="${formalizationLink}" style="${buttonStyle}">SÍ, QUIERO LA OFERTA</a>
                         </td></tr>
                     </table>
-                    
-                    <p style="font-size: 0.8em; color: #555;">[Cód. Colaborador: ${commercialCode}]</p>
-                    <p style="font-size: 0.7em; color: #888; margin-top: 15px;">*Este email es una simulación. El desglose completo de precios y más detalles están disponibles en la plataforma del comercial.</p>
-                </div>
+                </td></tr>
+                <tr><td style="font-size: 10px; color: #888; padding-top: 10px;">[Cód. Colaborador: ${commercialCode}] *Este email es una simulación.</td></tr>
+                </table>
             `;
             
             // --- Cierre y codificación del Mailto ---
