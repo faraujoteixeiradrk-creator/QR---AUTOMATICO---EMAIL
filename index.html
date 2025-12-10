@@ -195,10 +195,10 @@
 
             <!-- Botones de Acción -->
             <div class="grid grid-cols-1 gap-3 mb-8">
-                 <!-- Botón para enviar la oferta por email (CTA-RED: Rojo) -->
+                 <!-- Botón para COPIAR COMPARATIVO (CTA-RED: Rojo) -->
                  <button id="send-offer-btn" class="w-full bg-cta-red-500 hover:bg-cta-red-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transform transition active:scale-95 flex items-center justify-center gap-3 mb-3">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.8 5.2a2 2 0 002.4 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    <span>ENVIAR OFERTA AL CLIENTE</span>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4 4m0 0l-4-4m4 4V5"></path></svg>
+                    <span>COPIAR COMPARATIVO</span>
                 </button>
 
 
@@ -264,18 +264,21 @@
         </div>
 
 
-        <!-- MODAL DE ENVÍO DE OFERTA (NUEVO) -->
+        <!-- MODAL DE COPIA DE OFERTA -->
         <div id="send-offer-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50 backdrop-blur-sm">
             <div class="bg-white p-6 rounded-2xl shadow-2xl max-w-sm w-full">
-                <h3 class="text-xl font-bold text-drk-800 mb-4">Datos para Enviar Oferta</h3>
+                <h3 class="text-xl font-bold text-drk-800 mb-4">Datos del Comercial y Cliente</h3>
                 
-                <input type="text" id="comercial-code-input" placeholder="Código de Colaborador (Obligatorio)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
-                <input type="email" id="client-email-input" placeholder="Email del Cliente (Obligatorio)" class="w-full mb-4 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
+                <!-- Campos Actualizados para pre-relleno -->
+                <input type="text" id="comercial-code-input" placeholder="CÓDIGO COMERCIAL (Obligatorio)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
+                <input type="text" id="client-name-input" placeholder="Nombre Cliente (Opcional p/ pre-relleno)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
+                <input type="tel" id="client-phone-input" placeholder="Teléfono Cliente (Opcional p/ pre-relleno)" class="w-full mb-3 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
+                <input type="email" id="client-email-input" placeholder="Email Cliente (Opcional p/ pre-relleno)" class="w-full mb-4 p-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-drk-500 outline-none text-sm">
 
                 <!-- Botón de Envío (CTA-RED: Rojo) -->
                 <button id="execute-send-offer-btn" class="w-full bg-cta-red-500 hover:bg-cta-red-600 text-white font-bold py-3 rounded-xl shadow-md transform transition active:scale-95 flex items-center justify-center gap-3 mb-3">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.8 5.2a2 2 0 002.4 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                    Generar Email y Enviar
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-2m-4-4l-4 4m0 0l-4-4m4 4V5"></path></svg>
+                    COPIAR AL PORTAPAPELES
                 </button>
 
                 <button onclick="document.getElementById('send-offer-modal').classList.add('hidden');" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-600 font-bold py-3 rounded-xl text-sm">
@@ -339,11 +342,13 @@
             capturePhotoBtn: document.getElementById('capture-photo-btn'),
             loadingStatus: document.getElementById('loading-status'),
             
-            // Elementos de envío de email (NUEVOS)
+            // Elementos de copia de oferta (Actualizados)
             sendOfferBtn: document.getElementById('send-offer-btn'),
             sendOfferModal: document.getElementById('send-offer-modal'),
             comercialCodeInput: document.getElementById('comercial-code-input'),
-            clientEmailInput: document.getElementById('client-email-input'),
+            clientNameInput: document.getElementById('client-name-input'), // NUEVO
+            clientPhoneInput: document.getElementById('client-phone-input'), // NUEVO
+            clientEmailInput: document.getElementById('client-email-input'), // NUEVO
             executeSendOfferBtn: document.getElementById('execute-send-offer-btn'),
 
             // Elementos para el contador
@@ -637,6 +642,93 @@
 
         // --- LÓGICA DE RENDERIZADO ---
 
+        // Función auxiliar para generar el HTML del desglose (igual que en el Canvas)
+        function generateBreakdownHtml(offer, bd) {
+            const oldPeriodCost = bd.importe_total;
+            const newMonthlyCost = bd.totalAnnual / 12;
+
+            const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
+            const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+            const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
+            
+            // Colores corporativos en HEX (para el correo)
+            const DRK_DARK_BLUE = '#0c4a6e';
+            const DRK_BLUE = '#075985';
+            const DRK_LIGHT_BLUE = '#e0f2fe';
+            const GREEN = '#10b981';
+
+            // Estilos CSS para el desglose
+            const baseStyle = `font-family: Arial, sans-serif; font-size: 11px; line-height: 1.4; color: #555; max-width: 450px; margin: 0 auto; border: 1px solid #ccc; padding: 10px; border-radius: 6px; background-color: #fff;`;
+            const headerStyle = `font-weight: bold; font-size: 13px; color: ${DRK_BLUE}; margin-top: 5px; border-left: 3px solid ${GREEN}; padding-left: 8px; margin-bottom: 5px;`;
+            const rowStyle = `display: flex; justify-content: space-between; margin-bottom: 2px;`;
+            const totalStyle = `font-weight: bold; color: white; padding: 5px 10px; margin-top: 5px; border-radius: 4px;`;
+            
+            // Contenido del desglose
+            // NOTA: Se usan etiquetas <table> simples para mayor compatibilidad con clientes de correo que ignoran 'display: flex'
+            return `
+                <table border="0" cellpadding="0" cellspacing="0" style="${baseStyle}">
+                    <tr>
+                        <td colspan="2"><h4 style="${headerStyle}">Cálculo Oficial de la Oferta - ${offer.name}</h4></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><p style="font-weight: bold; color: #333; margin-top: 10px;">TÉRMINO POTENCIA (Precio en €/kW Día)</p></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0;">P1 (${num(bd.potencia_p1_kw,2)} kW x ${bd.dias_facturados}d x ${num(bd.priceP1Day,6)})</td>
+                        <td style="text-align: right; padding: 2px 0;">${num(bd.costP1,2)} €</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0;">P2 (${num(bd.potencia_p2_kw,2)} kW x ${bd.dias_facturados}d x ${num(bd.priceP2Day,6)})</td>
+                        <td style="text-align: right; padding: 2px 0;">${num(bd.costP2,2)} €</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><p style="font-weight: bold; color: #333; margin-top: 10px;">TÉRMINO ENERGÍA (Precios en €/kWh)</p></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0;">E1 (${num(bd.consumo_punta,0)} kWh x ${numPrice(offer.p1_price)})</td>
+                        <td style="text-align: right; padding: 2px 0;">${num(bd.costE1,2)} €</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0;">E2 (${num(bd.consumo_llano,0)} kWh x ${numPrice(offer.p2_price)})</td>
+                        <td style="text-align: right; padding: 2px 0;">${num(bd.costE2,2)} €</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0;">E3 (${num(bd.consumo_valle,0)} kWh x ${numPrice(offer.p3_price)})</td>
+                        <td style="text-align: right; padding: 2px 0;">${num(bd.costE3,2)} €</td>
+                    </tr>
+                    
+                    <tr>
+                        <td colspan="2" style="border-top: 1px solid #ddd; padding-top: 5px;"></td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; color: ${DRK_DARK_BLUE}; padding: 2px 0;">SUBTOTAL (P+E)</td>
+                        <td style="text-align: right; font-weight: bold; color: ${DRK_DARK_BLUE}; padding: 2px 0;">${num(bd.subBase,2)} €</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0;">Impuesto Eléc. (${num(bd.IE_RATE * 100, 3)}%)</td>
+                        <td style="text-align: right; padding: 2px 0;">${num(bd.costIE,2)} €</td>
+                    </tr>
+                    <tr>
+                        <td style="font-weight: bold; padding: 2px 0;">BASE IMPONIBLE</td>
+                        <td style="text-align: right; font-weight: bold; padding: 2px 0;">${num(bd.baseImp,2)} €</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 2px 0;">IVA (21%)</td>
+                        <td style="text-align: right; padding: 2px 0;">${num(bd.costIVA,2)} €</td>
+                    </tr>
+
+                    <tr>
+                        <td colspan="2" style="padding-top: 10px;">
+                            <div style="${totalStyle} background-color: ${DRK_DARK_BLUE}; font-size: 14px; text-align: center;">
+                                TOTAL MES (Estimado): ${eur(newMonthlyCost)}
+                            </div>
+                        </td>
+                    </tr>
+                </table>
+            `;
+        }
+
+
         function renderResultsUI(offer, bd) {
             const oldPeriodCost = bd.importe_total;
             const newMonthlyCost = bd.totalAnnual / 12;
@@ -675,7 +767,8 @@
                 </div>
             `;
 
-            // Renderizado del desglose 
+            // Renderizado del desglose DENTRO DEL CANVAS
+            // Aquí se usa Tailwind, no se necesita la lógica inline del generateBreakdownHtml
             els.costBreakdown.innerHTML = `
                 <div class="bg-white p-6 font-mono text-xs md:text-sm text-slate-600 leading-relaxed">
                     <div class="text-center border-b-2 border-dashed border-slate-300 pb-4 mb-4">
@@ -733,14 +826,10 @@
             `;
         }
 
-        // --- LÓGICA DE ENVÍO DE EMAIL (AJUSTADA A TEXTO PLANO CONCISO) ---
+        // --- LÓGICA DE COPIA DE OFERTA (REEMPLAZA ENVÍO DIRECTO) ---
 
-        function getFormattedPrice(price) {
-            // Formatea el precio a 8 decimales, usando coma decimal y quitando miles.
-            return new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8, useGrouping: false }).format(price);
-        }
-
-        function generateEmailOffer(commercialCode, clientEmail) {
+        // Función que genera el HTML maquetado listo para pegar en el cliente de correo
+        function generateStyledHtmlOffer(commercialCode) {
             if (!lastComparisonResult) {
                 throw new Error("No hay resultados de comparación.");
             }
@@ -751,92 +840,184 @@
             // Funciones de formato
             const eur = (n) => new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(n);
             const num = (n, d=2) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: d, maximumFractionDigits: d }).format(n);
+            const numPrice = (n) => new Intl.NumberFormat('es-ES', { minimumFractionDigits: 8, maximumFractionDigits: 8 }).format(n);
             
-            // --- 1. Generar Enlace de Formalización (Mantenido en texto plano)
-            // Este es el enlace que va DENTRO del cuerpo del email principal
+            // Colores corporativos en HEX para HTML incrustado en mailto:
+            const DRK_DARK_BLUE = '#0c4a6e'; // DRK-900
+            const DRK_BLUE = '#075985';     // DRK-800
+            const DRK_LIGHT_BLUE = '#e0f2fe'; // DRK-100
+            const CTA_RED_COLOR = '#CC0000';  // CTA-RED-500
+            const GREEN_SAVE = '#10b981';    // Verde para ahorro
+            // Correos de la empresa
+            const COMPANY_EMAILS = 'f.araujo@drk.es,r.guerra@drk.es,s.caballero@drk.es'; 
+
+            // Obtener valores de pre-relleno del modal
+            const clientName = els.clientNameInput.value.trim() || '[ESCRIBA AQUÍ SU NOMBRE COMPLETO]';
+            const clientPhone = els.clientPhoneInput.value.trim() || '[ESCRIBA AQUÍ SU NÚMERO DE TELÉFONO]';
+            const clientEmail = els.clientEmailInput.value.trim() || '[ESTE ES EL EMAIL DEL CLIENTE]';
+
+
+            // --- 1. Generar Enlace de Formalización (El que va en el botón "QUIERO LA OFERTA")
+            
+            // Sección de Precios DRK (Nueva Información Adicional para la empresa)
+            const pricingDetails = 
+                `--- INFORMACIÓN DE LA OFERTA DRK ---\n` +
+                `Tarifa Contratada: ${offer.name}\n` +
+                `Ahorro Anual Estimado: ${eur(bd.savings)}\n` +
+                `\n` +
+                `Precio Energía P1 (Punta): ${numPrice(offer.p1_price)} €/kWh\n` +
+                `Precio Energía P2 (Llano): ${numPrice(offer.p2_price)} €/kWh\n` +
+                `Precio Energía P3 (Valle): ${numPrice(offer.p3_price)} €/kWh\n` +
+                `\n` +
+                `Precio Potencia P1: ${num(offer.p_potencia_1, 2)} €/kW año\n` +
+                `Precio Potencia P2: ${num(offer.p_potencia_2, 2)} €/kW año\n` +
+                `------------------------------------\n`;
+
+            // Usamos saltos de línea codificados (%0D%0A) y el pre-relleno
             const formalizationBody = 
-                `Estimados DRK Energía,\n\n` +
-                `Confirmo mi interés en la oferta con CUPS: ${bd.cups}.%0D%0A%0D%0A` +
-                `Por favor, pónganse en contacto conmigo para iniciar la formalización. Mis datos son:%0D%0A` +
-                `Nombre completo: [ESCRIBA AQUÍ SU NOMBRE]%0D%0A` +
-                `Email de contacto: [ESCRIBA AQUÍ SU EMAIL]%0D%0A%0D%0A` +
-                `He adjuntado la documentación requerida (DNI, factura, IBAN, etc.).%0D%0A%0D%0A` +
-                `Atentamente,%0D%0A` +
+                `Hola equipo de Contratación DRK,%0D%0A%0D%0A` +
+                `Confirmo que deseo aceptar la oferta de ahorro con CUPS: ${bd.cups}.%0D%0A%0D%0A` +
+                `${pricingDetails}%0D%0A` + // Insertamos los detalles de la oferta para la empresa
+                `Por favor, utilicen los siguientes datos para tramitar mi cambio:%0D%0A` +
+                `--------------------------------------------------------%0D%0A` +
+                `DATOS DEL CLIENTE (A RELLENAR):%0D%0A` +
+                `--------------------------------------------------------%0D%0A` +
+                `Nombre completo: ${clientName}%0D%0A` +
+                `Teléfono de contacto: ${clientPhone}%0D%0A` +
+                `Email de contacto: ${clientEmail}%0D%0A%0D%0A` +
+                `--------------------------------------------------------%0D%0A` +
+                `INFORMACIÓN ADICIONAL (Opcional):%0D%0A` +
+                `--------------------------------------------------------%0D%0A` +
+                `[AGREGUE CUALQUIER COMENTARIO EXTRA AQUÍ]%0D%0A%0D%0A` +
+                `--- DOCUMENTACIÓN REQUERIDA ---%0D%0A` +
+                `Para formalizar el contrato, por favor, responde a este email adjuntando:%0D%0A` +
+                `1. Foto del DNI/CIF (anverso y reverso).%0D%0A` +
+                `2. Última factura (mínimo 3 meses de antigüedad).%0D%0A` +
+                `3. Email de contacto para validación.%0D%0A` +
+                `4. Teléfono de contacto.%0D%0A` +
+                `5. Número de cuenta bancaria (IBAN).%0D%0A%0D%0A` +
+                `Adjunto la documentación requerida.%0D%0A%0D%0A` +
+                `Gracias,%0D%0A` +
                 `[SU NOMBRE]`;
                 
-            const formalizationLink = `mailto:contratacion@drkenergia.com?subject=${encodeURIComponent(`ATT DRK - QUIERO OFERTA - ${bd.cups}`)}&body=${encodeURIComponent(formalizationBody)}`;
+            // El mailto ahora apunta a los tres correos de la empresa
+            const formalizationLink = `mailto:${COMPANY_EMAILS}?subject=${encodeURIComponent(`ACEPTACIÓN OFERTA - CUPS ${bd.cups}`)}&body=${formalizationBody}`;
 
-
-            // --- 2. Construir el cuerpo del Email en TEXTO PLANO (Máxima compatibilidad y resumen)
+            // --- 2. Construir el HTML del Desglose Completo (Misma lógica que la UI, pero con estilos inline)
             
-            let plainTextContent = `
-A la atención del Cliente,
+            const breakdownHtml = generateBreakdownHtml(offer, bd);
 
-Adjunto el resumen de la oferta de DRK Energía generada por nuestro colaborador (${commercialCode}).
 
-=============================================
-OFERTA DE AHORRO DRK ENERGÍA
-=============================================
-Tarifa: ${offer.name}
-CUPS: ${bd.cups}
----------------------------------------------
-Ahorro Anual Estimado: ${eur(bd.savings)}
-Coste Mensual Estimado: ${eur(bd.totalAnnual / 12)}
----------------------------------------------
-
-FORMALIZACIÓN RÁPIDA (Si desea aceptar la oferta):
-Para contratar, simplemente haga clic en el siguiente enlace de aceptación. Se abrirá un email a nuestro equipo de Contratación:
-
--> ENLACE DE ACEPTACIÓN: ${formalizationLink}
-
-DOCUMENTACIÓN REQUERIDA PARA CONTRATAR:
-Para formalizar el contrato, responda al email que se genera con el enlace adjuntando DNI, última factura y número de cuenta (IBAN).
-
-Atentamente,
-Equipo Comercial DRK Energía
-`;
+            // --- 3. Construir el cuerpo HTML PRINCIPAL (Maquetado y listo para copiar)
             
-            // --- Cierre y codificación del Mailto ---
-            const subject = encodeURIComponent(`Oferta DRK: Ahorro ${eur(bd.savings)} - CUPS ${bd.cups}`);
-            
-            // Usamos el contenido de Texto Plano y lo codificamos
-            const mailtoUrl = `mailto:${clientEmail}?subject=${subject}&body=${encodeURIComponent(plainTextContent)}`;
+            // Estilos para la tabla principal
+            const tableStyle = `border-collapse: collapse; width: 100%; max-width: 450px; margin: 15px auto; font-family: Arial, sans-serif;`;
+            const headerStyle = `background-color: ${DRK_DARK_BLUE}; color: white; padding: 10px; font-weight: bold; font-size: 16px; text-align: center; border-top-left-radius: 8px; border-top-right-radius: 8px;`;
+            const rowStyle = `padding: 10px 15px; border-bottom: 1px solid #eee; font-size: 13px;`;
+            const highlightStyle = `background-color: ${DRK_LIGHT_BLUE}; color: ${DRK_BLUE}; font-weight: bold;`;
+            const buttonStyle = `display: inline-block; padding: 12px 25px; margin: 15px auto; background-color: ${CTA_RED_COLOR}; color: white; text-decoration: none; border-radius: 8px; font-weight: bold; border: none; text-align: center; font-size: 16px;`;
 
-            return mailtoUrl;
+            // HTML que se copiará al portapapeles
+            let htmlContent = `
+                <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; padding: 10px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                    <h3 style="color: ${DRK_DARK_BLUE}; margin-bottom: 20px; text-align: center;">
+                        ⭐ RESUMEN OFERTA DE AHORRO DRK ENERGÍA ⭐
+                    </h3>
+                    
+                    <!-- TABLA PRINCIPAL RESUMEN -->
+                    <table border="0" cellpadding="0" cellspacing="0" style="${tableStyle} border: 1px solid ${DRK_BLUE}; border-radius: 8px; overflow: hidden;">
+                        <tr><td colspan="2" style="${headerStyle}">TU NUEVA TARIFA: ${offer.name}</td></tr>
+                        
+                        <tr><td style="${rowStyle} width: 50%;">CUPS de Suministro:</td><td style="${rowStyle} font-weight: bold;">${bd.cups}</td></tr>
+                        
+                        <tr><td style="${rowStyle} ${highlightStyle}">&#128176; AHORRO ANUAL ESTIMADO:</td><td style="${rowStyle} ${highlightStyle} color: ${bd.savings >= 0 ? GREEN_SAVE : CTA_RED_COLOR}; font-size: 16px;">${eur(bd.savings)}</td></tr>
+                        
+                        <tr><td style="${rowStyle}">Proyección Coste Mensual:</td><td style="${rowStyle} font-weight: bold; font-size: 16px;">${eur(bd.totalAnnual / 12)}</td></tr>
+                    </table>
+
+                    <h3 style="color: ${DRK_BLUE}; margin-top: 30px; margin-bottom: 10px; text-align: center; font-size: 18px;">
+                        DESGLOSE COMPLETO DEL CÁLCULO
+                    </h3>
+
+                    <!-- DESGLOSE DETALLADO INCLUIDO (Contenido de breakdownHtml) -->
+                    ${breakdownHtml}
+
+                    <p style="margin-top: 35px; margin-bottom: 15px; font-size: 14px; text-align: center; color: ${DRK_BLUE}; font-weight: bold;">
+                        ¿ACEPTA LA OFERTA Y QUIERE EMPEZAR A AHORRAR?
+                    </p>
+
+                    <p style="text-align: center; padding: 0 10px 10px 10px;">
+                        <a href="${formalizationLink}" style="${buttonStyle}">QUIERO LA OFERTA</a>
+                    </p>
+                    
+                    <p style="font-size: 10px; color: #888; margin-top: 20px; text-align: center;">
+                        [Colaborador: ${commercialCode}] | Este resumen es una simulación basada en su última factura.
+                    </p>
+                </div>
+            `;
+            
+            return htmlContent;
         }
 
-        function handleSendOffer() {
+        // Función que gestiona la copia al portapapeles
+        async function handleCopyOffer() {
             const commercialCode = els.comercialCodeInput.value.trim();
-            const clientEmail = els.clientEmailInput.value.trim();
 
-            if (!commercialCode || !clientEmail) {
-                return window.showErrorModal("Por favor, rellene el Código de Colaborador y el Email del Cliente.");
-            }
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail)) {
-                 return window.showErrorModal("El formato del email del cliente no es válido.");
+            if (!commercialCode) {
+                return window.showErrorModal("Por favor, rellene el Código de Colaborador.");
             }
             if (!lastComparisonResult) {
-                return window.showErrorModal("Error: No hay una oferta calculada para enviar.");
+                return window.showErrorModal("Error: No hay una oferta calculada para copiar.");
             }
 
             try {
-                const mailtoLink = generateEmailOffer(commercialCode, clientEmail);
+                const htmlContent = generateStyledHtmlOffer(commercialCode);
                 
-                // Abre la aplicación de correo
-                window.open(mailtoLink, '_self');
+                // --- LÓGICA: COPIA ENRIQUECIDA (HTML) ---
+                
+                // 1. Crear elemento temporal y llenarlo con el HTML
+                const tempElement = document.createElement('div');
+                tempElement.style.position = 'absolute';
+                tempElement.style.left = '-9999px';
+                // Añadimos un atributo de contenido editable para mejorar la compatibilidad en algunos entornos
+                tempElement.setAttribute('contenteditable', 'true');
+                tempElement.innerHTML = htmlContent;
+                document.body.appendChild(tempElement);
+                
+                // 2. Seleccionar el contenido (se requiere focus para document.execCommand)
+                const range = document.createRange();
+                range.selectNodeContents(tempElement);
+                const selection = window.getSelection();
+                selection.removeAllRanges();
+                selection.addRange(range);
+                
+                // 3. Ejecutar comando de copia (Funciona para HTML en la mayoría de clientes de correo)
+                let success = false;
+                try {
+                    // Usamos el execCommand tradicional que sigue siendo el más fiable para copia HTML
+                    success = document.execCommand('copy');
+                } catch (err) {
+                    console.error('Copy command failed:', err);
+                }
+                
+                // 4. Limpiar
+                selection.removeAllRanges();
+                document.body.removeChild(tempElement);
 
-                // Oculta el modal después de generar el enlace
+                if (success) {
+                    window.showMessageModal(`✅ ¡Copiado! Ahora **pegue (Ctrl+V o Cmd+V)** el contenido en el cuerpo de su email. Código: ${commercialCode}`);
+                } else {
+                     // Si falla, volvemos a la copia de texto plano con advertencia
+                     await navigator.clipboard.writeText(htmlContent);
+                     window.showErrorModal(`⚠️ Aviso: La copia automática de HTML falló. Se copió el texto sin formato. Por favor, **pegue y luego copie manualmente el texto maquetado** que aparece en el email para reenviarlo. (Esto es habitual en navegadores antiguos o clientes de correo nativos como Apple Mail).`);
+                }
+                
+                // Oculta el modal
                 els.sendOfferModal.classList.add('hidden');
                 
-                // Limpiar inputs del modal
-                // No limpiamos el código de colaborador, ya que probablemente el mismo comercial haga varios envíos
-                // els.comercialCodeInput.value = '';
-                els.clientEmailInput.value = '';
-
             } catch (e) {
-                console.error("Error al generar el mailto:", e);
-                // Si falla, el error es probablemente el límite de la URL
-                window.showErrorModal(`Error al generar el email: ${e.message}. Esto suele ocurrir si el enlace es demasiado largo (límite de 2048 caracteres).`);
+                console.error("Error al copiar al portapapeles:", e);
+                window.showErrorModal(`Error al copiar: Su navegador bloqueó el acceso al portapapeles. Intente copiar manualmente el código si es necesario. (Error: ${e.message})`);
             }
         }
 
@@ -1041,7 +1222,7 @@ Equipo Comercial DRK Energía
             els.stopScanBtn.addEventListener('click', stopScanner);
             els.capturePhotoBtn.addEventListener('click', capturePhoto);
             
-            // Listener para mostrar el modal de envío de oferta
+            // Listener para mostrar el modal de COPIA
             els.sendOfferBtn.addEventListener('click', () => {
                 if (lastComparisonResult) {
                     els.sendOfferModal.classList.remove('hidden');
@@ -1049,8 +1230,8 @@ Equipo Comercial DRK Energía
                     window.showErrorModal("Por favor, analice una factura primero para generar una oferta.");
                 }
             });
-            // Listener para ejecutar el envío de oferta
-            els.executeSendOfferBtn.addEventListener('click', handleSendOffer);
+            // Listener para ejecutar la COPIA
+            els.executeSendOfferBtn.addEventListener('click', handleCopyOffer);
 
             // Listeners para el menú de opciones QR manual
             els.uploadMenuBtn.addEventListener('click', () => els.qrOptionsModal.classList.remove('hidden'));
