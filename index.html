@@ -696,10 +696,7 @@
                         </div>
                     </td></tr>
 
-                    <!-- TABLA DE RESUMEN DE PRECIOS -->
-                    ${preciosResumenTable}
-
-                    <!-- COMPARATIVA (Se mantiene el formato lado a lado, pero se añade Total Anual) -->
+                    <!-- COMPARATIVA (MOVIDA AQUÍ: TU FACTURA ACTUAL vs NUEVO COSTE DRK) -->
                     <tr><td colspan="2" style="padding: 0 20px;">
                         <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 20px;">
                             <tr>
@@ -717,12 +714,15 @@
                             </tr>
                         </table>
                     </td></tr>
+                    
+                    <!-- RESUMEN DE PRECIOS UNITARIOS (MOVIDO AQUÍ) -->
+                    ${preciosResumenTable}
 
                     <!-- DESGLOSE DETALLADO -->
                     <tr><td colspan="2"><div style="${sectionTitle}">DESGLOSE DETALLADO DE LA SIMULACIÓN (${offer.name})</div></td></tr>
                     ${desgloseRows}
                     
-                    <!-- NUEVO RESUMEN DE AHORRO AL FINAL (Solicitado) -->
+                    <!-- RESUMEN DE AHORRO AL FINAL (MOVIDO AL FINAL, antes de CTA) -->
                     ${finalSavingsSummary}
 
                     <!-- CTA -->
